@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import type { Perfil } from '../contexts/AuthContext'
-import { SETORES, UNIDADES } from '../lib/constantes'
 import { CampoListaInteligente } from './CampoListaInteligente'
 import { SeletorFornecedores, type FornecedorSel } from './SeletorFornecedores'
 
@@ -38,8 +37,8 @@ export function CatalogoProdutos({ perfil }: { perfil: Perfil }) {
 
   // Campos do formulário
   const [nome, setNome] = useState('')
-  const [setor, setSetor] = useState<string>(SETORES[0])
-  const [unidade, setUnidade] = useState<string>(UNIDADES[0])
+  const [setor, setSetor] = useState<string>('')
+  const [unidade, setUnidade] = useState<string>('')
   const [categoria, setCategoria] = useState('')
   const [marca, setMarca] = useState('')
   const [valorRef, setValorRef] = useState('')
@@ -79,6 +78,14 @@ export function CatalogoProdutos({ perfil }: { perfil: Perfil }) {
   function adicionar(evento: FormEvent) {
     evento.preventDefault()
     setMensagem(null)
+    if (!setor) {
+      setMensagem('⚠️ Escolhe o setor antes de continuar.')
+      return
+    }
+    if (!unidade) {
+      setMensagem('⚠️ Escolhe a unidade antes de continuar.')
+      return
+    }
     if (!categoria) {
       setMensagem('⚠️ Escolhe uma categoria antes de continuar.')
       return
@@ -197,8 +204,8 @@ export function CatalogoProdutos({ perfil }: { perfil: Perfil }) {
 
   function limparFormulario() {
     setNome('')
-    setSetor(SETORES[0])
-    setUnidade(UNIDADES[0])
+    setSetor('')
+    setUnidade('')
     setCategoria('')
     setMarca('')
     setValorRef('')
@@ -256,10 +263,11 @@ export function CatalogoProdutos({ perfil }: { perfil: Perfil }) {
   // Foto a mostrar na pré-visualização: a nova (se escolhida) ou a já existente (na edição)
   const fotoPreview = previewUrl ?? fotoUrlExistente
 
-  // Categorias existentes (para o filtro)
+  // Categorias e setores existentes (para os filtros)
   const categoriasDistintas = [
     ...new Set(produtos.map((p) => p.categoria).filter(Boolean)),
   ] as string[]
+  const setoresDistintos = [...new Set(produtos.map((p) => p.setor).filter(Boolean))] as string[]
 
   // Produtos depois de aplicar os filtros
   const produtosFiltrados = produtos.filter((p) => {
@@ -286,16 +294,14 @@ export function CatalogoProdutos({ perfil }: { perfil: Perfil }) {
         <h3>{editandoId ? 'Editar produto' : 'Adicionar produto'}</h3>
         <div className="grelha-form">
           {/* 1 - Setor */}
-          <label>
-            Setor *
-            <select value={setor} onChange={(e) => setSetor(e.target.value)}>
-              {SETORES.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </label>
+          <CampoListaInteligente
+            rotulo="Setor"
+            tabela="setores"
+            empresaId={perfil.empresa_id}
+            valor={setor}
+            aoMudar={setSetor}
+            obrigatorio
+          />
 
           {/* 2 - Categoria */}
           <CampoListaInteligente
@@ -304,20 +310,19 @@ export function CatalogoProdutos({ perfil }: { perfil: Perfil }) {
             empresaId={perfil.empresa_id}
             valor={categoria}
             aoMudar={setCategoria}
+            exemplo="Cimentos"
             obrigatorio
           />
 
           {/* 3 - Unidade */}
-          <label>
-            Unidade *
-            <select value={unidade} onChange={(e) => setUnidade(e.target.value)}>
-              {UNIDADES.map((u) => (
-                <option key={u} value={u}>
-                  {u}
-                </option>
-              ))}
-            </select>
-          </label>
+          <CampoListaInteligente
+            rotulo="Unidade"
+            tabela="unidades"
+            empresaId={perfil.empresa_id}
+            valor={unidade}
+            aoMudar={setUnidade}
+            obrigatorio
+          />
 
           {/* 4 - Marca */}
           <CampoListaInteligente
@@ -326,6 +331,7 @@ export function CatalogoProdutos({ perfil }: { perfil: Perfil }) {
             empresaId={perfil.empresa_id}
             valor={marca}
             aoMudar={setMarca}
+            exemplo="Sika"
           />
 
           {/* 5 - Produto (nome) com sugestões para evitar duplicados */}
@@ -401,7 +407,7 @@ export function CatalogoProdutos({ perfil }: { perfil: Perfil }) {
               step="0.01"
               value={valorRef}
               onChange={(e) => setValorRef(e.target.value)}
-              placeholder="(opcional)"
+              placeholder="Ex: 4.50 (opcional)"
             />
           </label>
 
@@ -462,7 +468,7 @@ export function CatalogoProdutos({ perfil }: { perfil: Perfil }) {
             />
             <select value={filtroSetor} onChange={(e) => setFiltroSetor(e.target.value)}>
               <option value="">Todos os setores</option>
-              {SETORES.map((s) => (
+              {setoresDistintos.map((s) => (
                 <option key={s} value={s}>
                   {s}
                 </option>

@@ -122,7 +122,7 @@ export function SeletorFornecedores({ empresaId, selecionados, aoMudar }: Props)
           }}
         >
           <option value="" disabled hidden>
-            ➕ Adicionar fornecedor
+            (escolher)
           </option>
           {opcoes
             .filter((o) => !selecionados.some((s) => s.fornecedor_id === o.id))

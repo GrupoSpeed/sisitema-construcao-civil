@@ -6,13 +6,14 @@ import { capitalizarPalavras } from '../lib/constantes'
 
 type Props = {
   rotulo: string
-  tabela: 'categorias' | 'marcas' | 'localidades' | 'segmentos'
+  tabela: 'categorias' | 'marcas' | 'localidades' | 'segmentos' | 'setores' | 'unidades'
   empresaId: string | null
   valor: string
   aoMudar: (valor: string) => void
   obrigatorio?: boolean
   desativado?: boolean
   capitalizar?: boolean
+  exemplo?: string
 }
 
 export function CampoListaInteligente({
@@ -24,6 +25,7 @@ export function CampoListaInteligente({
   obrigatorio = false,
   desativado = false,
   capitalizar = false,
+  exemplo,
 }: Props) {
   const [opcoes, setOpcoes] = useState<string[]>([])
   const [aCriarNova, setACriarNova] = useState(false)
@@ -94,10 +96,10 @@ export function CampoListaInteligente({
         >
           {obrigatorio ? (
             <option value="" disabled hidden>
-              (escolher)
+              {exemplo ? `Ex: ${exemplo}` : '(escolher)'}
             </option>
           ) : (
-            <option value="">(nenhuma)</option>
+            <option value="">{exemplo ? `Ex: ${exemplo}` : '(nenhuma)'}</option>
           )}
           {listaOpcoes.map((o) => (
             <option key={o} value={o}>
