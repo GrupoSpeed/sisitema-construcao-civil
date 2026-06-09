@@ -197,9 +197,9 @@ export function GestaoColaboradores({ empresaId }: { empresaId: string }) {
     carregar()
   }
 
-  function cargoDe(c: Colaborador): string {
+  function nivelAcessoDe(c: Colaborador): string {
     if (c.is_super_admin) return 'Super Admin'
-    return CARGOS[c.nivel_acesso] ?? `Nível ${c.nivel_acesso}`
+    return `${c.nivel_acesso} — ${CARGOS[c.nivel_acesso] ?? 'Nível ' + c.nivel_acesso}`
   }
 
   return (
@@ -369,13 +369,14 @@ export function GestaoColaboradores({ empresaId }: { empresaId: string }) {
       ) : colaboradores.length === 0 ? (
         <p className="vazio">Ainda não há colaboradores. Adiciona o primeiro acima! 👆</p>
       ) : (
+        <div className="tabela-scroll">
         <table className="tabela">
           <thead>
             <tr>
               <th>Nome</th>
               <th>NIF</th>
               <th>Email</th>
-              <th>Cargo</th>
+              <th>Nível de acesso</th>
               <th>Comprador</th>
               <th>Estado</th>
               <th>Ações</th>
@@ -387,7 +388,7 @@ export function GestaoColaboradores({ empresaId }: { empresaId: string }) {
                 <td>{c.nome ?? '—'}</td>
                 <td>{c.nif ? agrupar3(c.nif) : '—'}</td>
                 <td>{c.email ?? '—'}</td>
-                <td>{cargoDe(c)}</td>
+                <td>{nivelAcessoDe(c)}</td>
                 <td>{c.is_comprador ? '✔️' : '—'}</td>
                 <td>
                   <span className={'badge badge-' + (c.ativo ? 'aprovado' : 'rejeitado')}>
@@ -414,6 +415,7 @@ export function GestaoColaboradores({ empresaId }: { empresaId: string }) {
             ))}
           </tbody>
         </table>
+        </div>
       )}
 
       {/* Confirmação de excluir */}

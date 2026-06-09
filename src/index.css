@@ -391,6 +391,86 @@ body {
   padding: 24px;
 }
 
+/* ----- Rodapé fixo e discreto ----- */
+.rodape {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 18px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-top: 1px solid var(--borda);
+  z-index: 40;
+}
+
+.rodape-marca {
+  font-size: 12px;
+  color: var(--texto-suave);
+}
+
+.rodape-acoes {
+  display: flex;
+  gap: 4px;
+}
+
+.rodape-icone {
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  line-height: 1;
+  padding: 5px 7px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.rodape-icone:hover {
+  background: var(--cinza-fundo);
+}
+
+.lista-legal {
+  margin: 0 0 20px;
+  padding-left: 18px;
+  color: var(--texto-suave);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Espaço no fundo para o conteúdo não ficar tapado pelo rodapé fixo */
+body {
+  padding-bottom: 48px;
+}
+
+/* Ecrãs com tabelas largas (ex.: Empresas Registadas) usam mais da largura do ecrã */
+.pagina-larga {
+  max-width: 1200px;
+}
+
+/* Permite rolar a tabela na horizontal quando não cabe no ecrã */
+.tabela-scroll {
+  overflow-x: auto;
+}
+
+.tabela-scroll .tabela {
+  min-width: 900px;
+}
+
+.tabela-scroll .tabela th,
+.tabela-scroll .tabela td {
+  padding: 9px 11px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.tabela-scroll .tabela th {
+  font-size: 11px;
+}
+
 .pagina h2 {
   margin: 8px 0 4px;
 }

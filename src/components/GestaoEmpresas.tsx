@@ -49,7 +49,7 @@ export function GestaoEmpresas() {
   )
 
   return (
-    <div className="pagina">
+    <div className="pagina pagina-larga">
       <h2>Empresas Registadas</h2>
       <p className="subtexto">Todas as empresas que usam o sistema.</p>
 
@@ -76,6 +76,7 @@ export function GestaoEmpresas() {
         ) : empresasFiltradas.length === 0 ? (
           <p className="vazio">Nenhuma empresa corresponde ao filtro.</p>
         ) : (
+          <div className="tabela-scroll">
           <table className="tabela">
             <thead>
               <tr>
@@ -85,6 +86,7 @@ export function GestaoEmpresas() {
                 <th>Localidade</th>
                 <th>Telefone</th>
                 <th>Email</th>
+                <th>Website</th>
                 <th>Utilizadores</th>
                 <th>Registada em</th>
               </tr>
@@ -101,25 +103,27 @@ export function GestaoEmpresas() {
                   </td>
                   <td>
                     <strong>{e.nome}</strong>
-                    {e.website && (
-                      <>
-                        <br />
-                        <a href={e.website} target="_blank" rel="noreferrer" className="ligacao-mini">
-                          {e.website.replace(/^https?:\/\//, '')}
-                        </a>
-                      </>
-                    )}
                   </td>
                   <td>{e.nif ? agrupar3(e.nif) : '—'}</td>
                   <td>{e.localidade ?? '—'}</td>
                   <td>{e.telefone ? agrupar3(e.telefone) : '—'}</td>
                   <td>{e.email ?? '—'}</td>
+                  <td>
+                    {e.website ? (
+                      <a href={e.website} target="_blank" rel="noreferrer" className="ligacao-mini">
+                        {e.website.replace(/^https?:\/\//, '')}
+                      </a>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
                   <td>{numUtilizadores(e)}</td>
                   <td>{dataPt(e.criado_em)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>

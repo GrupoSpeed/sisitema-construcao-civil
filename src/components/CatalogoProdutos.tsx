@@ -485,6 +485,7 @@ export function CatalogoProdutos({ perfil }: { perfil: Perfil }) {
         ) : produtosFiltrados.length === 0 ? (
           <p className="vazio">Nenhum produto corresponde ao filtro.</p>
         ) : (
+          <div className="tabela-scroll">
           <table className="tabela">
             <thead>
               <tr>
@@ -551,6 +552,7 @@ export function CatalogoProdutos({ perfil }: { perfil: Perfil }) {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 

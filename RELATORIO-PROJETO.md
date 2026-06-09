@@ -10,6 +10,13 @@ Plataforma **SaaS multi-empresa** para gestão de empresas de **construção civ
 Cada empresa tem o seu espaço isolado; o dono do SaaS (Super Admin) vê tudo.
 São **11 módulos** no total. Estamos a construir o **1.º: Módulo de Materiais**.
 
+> **Visão (multi-segmento):** o sistema deve poder **adaptar-se a vários ramos** além da
+> construção civil (ex.: restauração, gráfica…). No **registo da empresa**, ela escolhe o
+> **segmento**. As empresas do mesmo segmento vão **alimentando e aproveitando dados partilhados**
+> (listas de materiais/produtos comuns e outras configurações), para que cada nova empresa já
+> comece com uma base útil. *Ainda não implementado — é a direção a seguir nas decisões de
+> modelo de dados e interface.*
+
 ## 2. Tecnologias (stack)
 - **Frontend (ecrãs):** React + Vite + TypeScript
 - **Base de dados + Login:** Supabase (PostgreSQL na nuvem)

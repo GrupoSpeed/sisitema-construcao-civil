@@ -5,6 +5,7 @@ import { BarraTopo } from './components/BarraTopo'
 import { CatalogoProdutos } from './components/CatalogoProdutos'
 import { PerfilEmpresa } from './components/PerfilEmpresa'
 import { GestaoEmpresas } from './components/GestaoEmpresas'
+import { RodaPe } from './components/RodaPe'
 import type { Pagina } from './lib/navegacao'
 
 function App() {
@@ -41,6 +42,8 @@ function App() {
           </div>
         </div>
       )}
+
+      <RodaPe />
     </>
   )
 }
