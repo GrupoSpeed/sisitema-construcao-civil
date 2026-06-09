@@ -2,14 +2,17 @@
 // e permite adicionar um novo, que fica guardado para os próximos produtos.
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
+import { capitalizarPalavras } from '../lib/constantes'
 
 type Props = {
   rotulo: string
-  tabela: 'categorias' | 'marcas'
+  tabela: 'categorias' | 'marcas' | 'localidades'
   empresaId: string | null
   valor: string
   aoMudar: (valor: string) => void
   obrigatorio?: boolean
+  desativado?: boolean
+  capitalizar?: boolean
 }
 
 export function CampoListaInteligente({
@@ -19,6 +22,8 @@ export function CampoListaInteligente({
   valor,
   aoMudar,
   obrigatorio = false,
+  desativado = false,
+  capitalizar = false,
 }: Props) {
   const [opcoes, setOpcoes] = useState<string[]>([])
   const [aCriarNova, setACriarNova] = useState(false)
@@ -35,7 +40,7 @@ export function CampoListaInteligente({
   }, [])
 
   async function adicionarNova() {
-    const nome = novoNome.trim()
+    const nome = capitalizar ? capitalizarPalavras(novoNome.trim()) : novoNome.trim()
     if (!nome) return
     // Guarda a nova opção (ignora se já existir)
     await supabase
@@ -60,6 +65,7 @@ export function CampoListaInteligente({
             value={novoNome}
             onChange={(e) => setNovoNome(e.target.value)}
             placeholder="Escrever nova…"
+            spellCheck={false}
             autoFocus
           />
           <button type="button" className="botao-mini" onClick={adicionarNova}>
@@ -77,6 +83,7 @@ export function CampoListaInteligente({
         <select
           value={valor}
           required={obrigatorio}
+          disabled={desativado}
           onChange={(e) => {
             if (e.target.value === '__nova__') {
               setACriarNova(true)

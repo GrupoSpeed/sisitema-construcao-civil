@@ -3,7 +3,9 @@ import { useEffect, useRef, useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabaseClient'
-import { agrupar3 } from '../lib/constantes'
+import { agrupar3, capitalizarPalavras, formatarCodigoPostal, emailValido } from '../lib/constantes'
+import { CampoListaInteligente } from './CampoListaInteligente'
+import { GestaoColaboradores } from './GestaoColaboradores'
 
 const BUCKET_EMPRESAS = 'empresas'
 
@@ -25,30 +27,41 @@ export function PerfilEmpresa() {
   const [aGuardar, setAGuardar] = useState(false)
   const [aEnviarLogo, setAEnviarLogo] = useState(false)
   const [mensagem, setMensagem] = useState<string | null>(null)
+  const [editando, setEditando] = useState(false)
+  const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false)
   const inputLogoRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    async function carregar() {
-      if (!empresa) {
-        setCarregando(false)
-        return
-      }
-      const { data } = await supabase.from('empresas').select('*').eq('id', empresa.id).single()
-      if (data) {
-        setNome(data.nome ?? '')
-        setNif(agrupar3(data.nif ?? ''))
-        setMorada(data.morada ?? '')
-        setCodigoPostal(data.codigo_postal ?? '')
-        setLocalidade(data.localidade ?? '')
-        setTelefone(agrupar3(data.telefone ?? ''))
-        setEmail(data.email ?? '')
-        setWebsite(data.website ?? '')
-        setLogoUrl(data.logo_url ?? null)
-      }
+  async function carregar() {
+    if (!empresa) {
       setCarregando(false)
+      return
     }
+    const { data } = await supabase.from('empresas').select('*').eq('id', empresa.id).single()
+    if (data) {
+      setNome(data.nome ?? '')
+      setNif(agrupar3(data.nif ?? ''))
+      setMorada(data.morada ?? '')
+      setCodigoPostal(data.codigo_postal ?? '')
+      setLocalidade(data.localidade ?? '')
+      setTelefone(agrupar3(data.telefone ?? ''))
+      setEmail(data.email ?? '')
+      setWebsite(data.website ?? '')
+      setLogoUrl(data.logo_url ?? null)
+    }
+    setCarregando(false)
+  }
+
+  useEffect(() => {
     carregar()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [empresa?.id])
+
+  // "Cancelar": desfaz as alterações (recarrega da base de dados) e sai do modo edição
+  function cancelarEdicao() {
+    carregar()
+    setEditando(false)
+    setMensagem(null)
+  }
 
   async function aoEscolherLogo(evento: ChangeEvent<HTMLInputElement>) {
     const ficheiro = evento.target.files?.[0]
@@ -83,10 +96,21 @@ export function PerfilEmpresa() {
     if (inputLogoRef.current) inputLogoRef.current.value = ''
   }
 
-  async function guardar(evento: FormEvent) {
+  // Ao submeter o formulário, pedimos confirmação antes de gravar
+  function guardar(evento: FormEvent) {
     evento.preventDefault()
-    if (!empresa) return
     setMensagem(null)
+    if (email && !emailValido(email)) {
+      setMensagem('⚠️ Corrige o email antes de guardar (ex: nome@empresa.pt).')
+      return
+    }
+    setMostrarConfirmacao(true)
+  }
+
+  // Grava mesmo, só depois do utilizador confirmar com "Sim"
+  async function confirmarGuardar() {
+    if (!empresa) return
+    setMostrarConfirmacao(false)
     setAGuardar(true)
     const { error } = await supabase
       .from('empresas')
@@ -106,6 +130,7 @@ export function PerfilEmpresa() {
       setMensagem('❌ Não foi possível guardar: ' + error.message)
       return
     }
+    setEditando(false)
     setMensagem('✅ Dados da empresa guardados!')
     recarregarEmpresa()
   }
@@ -114,7 +139,19 @@ export function PerfilEmpresa() {
 
   return (
     <div className="pagina">
-      <h2>Perfil da Empresa</h2>
+      <div className="cabecalho-pagina">
+        <h2>Perfil da Empresa</h2>
+        {podeGerir && !editando && (
+          <button
+            type="button"
+            className="botao-icone"
+            title="Editar dados da empresa"
+            onClick={() => setEditando(true)}
+          >
+            ✏️
+          </button>
+        )}
+      </div>
       <p className="subtexto">Os dados da tua empresa no sistema.</p>
 
       <form className="cartao-form" onSubmit={guardar}>
@@ -123,7 +160,7 @@ export function PerfilEmpresa() {
           <div className="perfil-logo-img">
             {logoUrl ? <img src={logoUrl} alt="Logótipo" /> : <span>{nome.charAt(0) || '🏗️'}</span>}
           </div>
-          {podeGerir && (
+          {podeGerir && editando && (
             <div>
               <button
                 type="button"
@@ -147,7 +184,13 @@ export function PerfilEmpresa() {
         <div className="grelha-form">
           <label>
             Nome da empresa *
-            <input value={nome} onChange={(e) => setNome(e.target.value)} required disabled={!podeGerir} />
+            <input
+              value={nome}
+              onChange={(e) => setNome(capitalizarPalavras(e.target.value))}
+              spellCheck={false}
+              required
+              disabled={!podeGerir || !editando}
+            />
           </label>
           <label>
             NIF / NIPC *
@@ -157,30 +200,37 @@ export function PerfilEmpresa() {
               inputMode="numeric"
               placeholder="000 000 000"
               required
-              disabled={!podeGerir}
+              disabled={!podeGerir || !editando}
             />
           </label>
           <label>
-            Morada
-            <input value={morada} onChange={(e) => setMorada(e.target.value)} disabled={!podeGerir} />
+            Morada Completa
+            <input
+              value={morada}
+              onChange={(e) => setMorada(capitalizarPalavras(e.target.value))}
+              spellCheck={false}
+              disabled={!podeGerir || !editando}
+            />
           </label>
           <label>
             Código Postal
             <input
               value={codigoPostal}
-              onChange={(e) => setCodigoPostal(e.target.value)}
+              onChange={(e) => setCodigoPostal(formatarCodigoPostal(e.target.value))}
+              inputMode="numeric"
               placeholder="0000-000"
-              disabled={!podeGerir}
+              disabled={!podeGerir || !editando}
             />
           </label>
-          <label>
-            Localidade
-            <input
-              value={localidade}
-              onChange={(e) => setLocalidade(e.target.value)}
-              disabled={!podeGerir}
-            />
-          </label>
+          <CampoListaInteligente
+            rotulo="Localidade"
+            tabela="localidades"
+            empresaId={empresa?.id ?? null}
+            valor={localidade}
+            aoMudar={setLocalidade}
+            desativado={!podeGerir || !editando}
+            capitalizar
+          />
           <label>
             Telefone / Telemóvel
             <input
@@ -188,12 +238,32 @@ export function PerfilEmpresa() {
               onChange={(e) => setTelefone(agrupar3(e.target.value))}
               inputMode="numeric"
               placeholder="000 000 000"
-              disabled={!podeGerir}
+              disabled={!podeGerir || !editando}
             />
           </label>
           <label>
             Email
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} disabled={!podeGerir} />
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setMensagem(null)
+                setEmail(e.target.value.toLowerCase().trim())
+              }}
+              onBlur={() => {
+                if (email && !emailValido(email)) {
+                  setEmail('')
+                  setMensagem('⚠️ O email não era válido e foi limpo. Volta a escrevê-lo.')
+                }
+              }}
+              inputMode="email"
+              placeholder="nome@empresa.pt"
+              spellCheck={false}
+              disabled={!podeGerir || !editando}
+            />
+            {email !== '' && !emailValido(email) && (
+              <small className="aviso-duplicado">⚠️ Email inválido (ex: nome@empresa.pt).</small>
+            )}
           </label>
           <label>
             Website
@@ -201,21 +271,48 @@ export function PerfilEmpresa() {
               value={website}
               onChange={(e) => setWebsite(e.target.value)}
               placeholder="https://…"
-              disabled={!podeGerir}
+              disabled={!podeGerir || !editando}
             />
           </label>
         </div>
 
         {mensagem && <div className="mensagem">{mensagem}</div>}
 
-        {podeGerir && (
+        {podeGerir && editando && (
           <div className="form-botoes">
             <button type="submit" disabled={aGuardar}>
               {aGuardar ? 'A guardar…' : 'Guardar dados'}
             </button>
+            <button type="button" className="botao-cancelar" onClick={cancelarEdicao}>
+              Cancelar
+            </button>
           </div>
         )}
       </form>
+
+      {podeGerir && empresa && <GestaoColaboradores empresaId={empresa.id} />}
+
+      {/* Confirmação antes de gravar as alterações */}
+      {mostrarConfirmacao && (
+        <div className="modal-fundo" onClick={() => setMostrarConfirmacao(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Guardar alterações?</h3>
+            <p>Confirmas que queres guardar os novos dados da empresa?</p>
+            <div className="modal-botoes">
+              <button
+                type="button"
+                className="botao-secundario"
+                onClick={() => setMostrarConfirmacao(false)}
+              >
+                Não
+              </button>
+              <button type="button" className="botao-primario" onClick={confirmarGuardar}>
+                Sim, guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

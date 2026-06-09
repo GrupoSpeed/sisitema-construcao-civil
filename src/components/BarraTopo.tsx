@@ -86,6 +86,18 @@ export function BarraTopo({
                 >
                   🏢 Perfil da Empresa
                 </button>
+                {perfil?.is_super_admin && (
+                  <button
+                    type="button"
+                    className={pagina === 'empresas' ? 'ativo' : ''}
+                    onClick={() => {
+                      aoNavegar('empresas')
+                      setMenuAberto(false)
+                    }}
+                  >
+                    🏬 Empresas Registadas
+                  </button>
+                )}
 
                 <div className="modulos-separador" />
 

@@ -4,6 +4,7 @@ import { Login } from './components/Login'
 import { BarraTopo } from './components/BarraTopo'
 import { CatalogoProdutos } from './components/CatalogoProdutos'
 import { PerfilEmpresa } from './components/PerfilEmpresa'
+import { GestaoEmpresas } from './components/GestaoEmpresas'
 import type { Pagina } from './lib/navegacao'
 
 function App() {
@@ -28,6 +29,8 @@ function App() {
       {perfil ? (
         pagina === 'empresa' ? (
           <PerfilEmpresa />
+        ) : pagina === 'empresas' && perfil.is_super_admin ? (
+          <GestaoEmpresas />
         ) : (
           <CatalogoProdutos perfil={perfil} />
         )
