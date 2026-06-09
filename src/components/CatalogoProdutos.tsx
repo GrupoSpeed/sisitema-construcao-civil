@@ -299,7 +299,10 @@ export function CatalogoProdutos({ perfil }: { perfil: Perfil }) {
             tabela="setores"
             empresaId={perfil.empresa_id}
             valor={setor}
-            aoMudar={setSetor}
+            aoMudar={(v) => {
+              setSetor(v)
+              setCategoria('') // a categoria depende do setor; ao mudar de setor, limpa
+            }}
             obrigatorio
           />
 
@@ -310,7 +313,9 @@ export function CatalogoProdutos({ perfil }: { perfil: Perfil }) {
             empresaId={perfil.empresa_id}
             valor={categoria}
             aoMudar={setCategoria}
-            exemplo="Cimentos"
+            filtroColuna="setor"
+            filtroValor={setor}
+            exemplo="Cabos"
             obrigatorio
           />
 

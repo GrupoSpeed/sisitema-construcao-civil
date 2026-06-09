@@ -14,6 +14,10 @@ type Props = {
   desativado?: boolean
   capitalizar?: boolean
   exemplo?: string
+  // Filtro opcional: mostra/cria só os valores ligados a outra coluna
+  // (ex.: categorias de um certo setor). filtroColuna="setor", filtroValor=setor escolhido.
+  filtroColuna?: string
+  filtroValor?: string
 }
 
 export function CampoListaInteligente({
@@ -26,28 +30,43 @@ export function CampoListaInteligente({
   desativado = false,
   capitalizar = false,
   exemplo,
+  filtroColuna,
+  filtroValor,
 }: Props) {
   const [opcoes, setOpcoes] = useState<string[]>([])
   const [aCriarNova, setACriarNova] = useState(false)
   const [novoNome, setNovoNome] = useState('')
 
+  // Quando há filtro mas ainda não foi escolhido o valor de referência (ex.: sem setor)
+  const aguardaFiltro = !!filtroColuna && !filtroValor
+
   async function carregar() {
-    const { data } = await supabase.from(tabela).select('nome').order('nome')
+    if (aguardaFiltro) {
+      setOpcoes([])
+      return
+    }
+    let consulta = supabase.from(tabela).select('nome').order('nome')
+    if (filtroColuna && filtroValor) consulta = consulta.eq(filtroColuna, filtroValor)
+    const { data } = await consulta
     if (data) setOpcoes(data.map((d) => d.nome as string))
   }
 
   useEffect(() => {
     carregar()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [filtroValor])
 
   async function adicionarNova() {
     const nome = capitalizar ? capitalizarPalavras(novoNome.trim()) : novoNome.trim()
     if (!nome) return
-    // Guarda a nova opção (ignora se já existir)
-    await supabase
-      .from(tabela)
-      .upsert({ empresa_id: empresaId, nome }, { onConflict: 'empresa_id,nome', ignoreDuplicates: true })
+    // Inclui a coluna de filtro (ex.: setor) e o conflito tem de a considerar
+    const registo: Record<string, unknown> = { empresa_id: empresaId, nome }
+    let conflito = 'empresa_id,nome'
+    if (filtroColuna && filtroValor) {
+      registo[filtroColuna] = filtroValor
+      conflito = `empresa_id,${filtroColuna},nome`
+    }
+    await supabase.from(tabela).upsert(registo, { onConflict: conflito, ignoreDuplicates: true })
     await carregar()
     aoMudar(nome)
     setNovoNome('')
@@ -85,7 +104,7 @@ export function CampoListaInteligente({
         <select
           value={valor}
           required={obrigatorio}
-          disabled={desativado}
+          disabled={desativado || aguardaFiltro}
           onChange={(e) => {
             if (e.target.value === '__nova__') {
               setACriarNova(true)
@@ -94,7 +113,11 @@ export function CampoListaInteligente({
             }
           }}
         >
-          {obrigatorio ? (
+          {aguardaFiltro ? (
+            <option value="" disabled hidden>
+              (escolhe primeiro o setor)
+            </option>
+          ) : obrigatorio ? (
             <option value="" disabled hidden>
               {exemplo ? `Ex: ${exemplo}` : '(escolher)'}
             </option>
@@ -106,7 +129,7 @@ export function CampoListaInteligente({
               {o}
             </option>
           ))}
-          <option value="__nova__">➕ Adicionar nova…</option>
+          {!aguardaFiltro && <option value="__nova__">➕ Adicionar nova…</option>}
         </select>
       )}
     </label>
