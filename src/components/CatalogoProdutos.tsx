@@ -29,6 +29,8 @@ export function CatalogoProdutos({ perfil }: { perfil: Perfil }) {
   const [aGuardar, setAGuardar] = useState(false)
   const [mensagem, setMensagem] = useState<string | null>(null)
   const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false)
+  // Modo "adicionar vários": mantém setor/categoria/unidade/marca para o próximo produto
+  const [continuarAdicionando, setContinuarAdicionando] = useState(false)
 
   // Edição e eliminação
   const [editandoId, setEditandoId] = useState<string | null>(null)
@@ -179,9 +181,24 @@ export function CatalogoProdutos({ perfil }: { perfil: Perfil }) {
       return
     }
 
-    setMensagem(editandoId ? '✅ Produto atualizado!' : '✅ Produto adicionado ao catálogo!')
-    limparFormulario()
+    if (!editandoId && continuarAdicionando) {
+      // Lançamento em lote: mantém setor/categoria/unidade/marca; limpa o resto
+      setMensagem('✅ Produto adicionado! Pronto para o próximo (mesmo setor/categoria).')
+      limparParcial()
+    } else {
+      setMensagem(editandoId ? '✅ Produto atualizado!' : '✅ Produto adicionado ao catálogo!')
+      limparFormulario()
+    }
     carregar()
+  }
+
+  // Limpeza parcial para lançar vários produtos seguidos no mesmo setor/categoria
+  function limparParcial() {
+    setNome('')
+    setValorRef('')
+    setFornecedoresSel([])
+    setFotoUrlExistente(null)
+    limparFoto()
   }
 
   function aoEscolherFoto(evento: ChangeEvent<HTMLInputElement>) {
@@ -269,6 +286,9 @@ export function CatalogoProdutos({ perfil }: { perfil: Perfil }) {
   ] as string[]
   const setoresDistintos = [...new Set(produtos.map((p) => p.setor).filter(Boolean))] as string[]
 
+  // Só se pode ativar o modo "adicionar vários" com setor, categoria e unidade preenchidos
+  const podeLote = !!setor && !!categoria && !!unidade
+
   // Produtos depois de aplicar os filtros
   const produtosFiltrados = produtos.filter((p) => {
     const okTexto = p.nome.toLowerCase().includes(filtroTexto.trim().toLowerCase())
@@ -303,6 +323,8 @@ export function CatalogoProdutos({ perfil }: { perfil: Perfil }) {
               setSetor(v)
               setCategoria('') // a categoria depende do setor; ao mudar de setor, limpa
             }}
+            desativado={continuarAdicionando}
+            realce={continuarAdicionando}
             obrigatorio
           />
 
@@ -315,6 +337,8 @@ export function CatalogoProdutos({ perfil }: { perfil: Perfil }) {
             aoMudar={setCategoria}
             filtroColuna="setor"
             filtroValor={setor}
+            desativado={continuarAdicionando}
+            realce={continuarAdicionando}
             exemplo="Cabos"
             obrigatorio
           />
@@ -326,6 +350,8 @@ export function CatalogoProdutos({ perfil }: { perfil: Perfil }) {
             empresaId={perfil.empresa_id}
             valor={unidade}
             aoMudar={setUnidade}
+            desativado={continuarAdicionando}
+            realce={continuarAdicionando}
             obrigatorio
           />
 
@@ -336,6 +362,8 @@ export function CatalogoProdutos({ perfil }: { perfil: Perfil }) {
             empresaId={perfil.empresa_id}
             valor={marca}
             aoMudar={setMarca}
+            desativado={continuarAdicionando}
+            realce={continuarAdicionando}
             exemplo="Sika"
           />
 
@@ -441,6 +469,22 @@ export function CatalogoProdutos({ perfil }: { perfil: Perfil }) {
             </label>
           </div>
         )}
+        {!editandoId && (
+          <label
+            className={'campo-checkbox campo-checkbox-lote' + (podeLote ? '' : ' campo-lote-inativo')}
+          >
+            <input
+              type="checkbox"
+              checked={continuarAdicionando}
+              disabled={!podeLote}
+              onChange={(e) => setContinuarAdicionando(e.target.checked)}
+            />
+            Adicionar vários — manter setor, categoria, unidade e marca para o próximo
+            {!podeLote && (
+              <small> (escolhe primeiro o setor, a categoria e a unidade)</small>
+            )}
+          </label>
+        )}
         {mensagem && <div className="mensagem">{mensagem}</div>}
         <div className="form-botoes">
           <button type="submit" disabled={aGuardar}>
@@ -448,7 +492,9 @@ export function CatalogoProdutos({ perfil }: { perfil: Perfil }) {
               ? 'A guardar…'
               : editandoId
                 ? 'Guardar alterações'
-                : 'Adicionar ao catálogo'}
+                : continuarAdicionando
+                  ? 'Adicionar e continuar'
+                  : 'Adicionar ao catálogo'}
           </button>
           {editandoId && (
             <button type="button" className="botao-cancelar" onClick={limparFormulario}>

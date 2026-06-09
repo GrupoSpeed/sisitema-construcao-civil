@@ -741,6 +741,25 @@ body {
   max-width: 720px;
 }
 
+.campo-checkbox-lote {
+  margin: 4px 0 12px;
+}
+
+.campo-lote-inativo {
+  color: var(--texto-suave);
+  cursor: not-allowed;
+}
+
+/* Campo fixo no modo "adicionar vários": cor distinta, sem aspeto de desativado */
+select.select-bloqueado,
+select.select-bloqueado:disabled {
+  background-color: #eaf3ff;
+  border-color: var(--azul);
+  color: var(--texto);
+  opacity: 1;
+  cursor: not-allowed;
+}
+
 .rotulo-com-ajuda {
   display: flex;
   align-items: center;

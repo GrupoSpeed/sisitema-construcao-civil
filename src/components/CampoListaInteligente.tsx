@@ -18,6 +18,8 @@ type Props = {
   // (ex.: categorias de um certo setor). filtroColuna="setor", filtroValor=setor escolhido.
   filtroColuna?: string
   filtroValor?: string
+  // Destaque visual quando o campo está fixo (ex.: bloqueado no modo "adicionar vários")
+  realce?: boolean
 }
 
 export function CampoListaInteligente({
@@ -32,6 +34,7 @@ export function CampoListaInteligente({
   exemplo,
   filtroColuna,
   filtroValor,
+  realce = false,
 }: Props) {
   const [opcoes, setOpcoes] = useState<string[]>([])
   const [aCriarNova, setACriarNova] = useState(false)
@@ -102,6 +105,7 @@ export function CampoListaInteligente({
         </div>
       ) : (
         <select
+          className={realce ? 'select-bloqueado' : undefined}
           value={valor}
           required={obrigatorio}
           disabled={desativado || aguardaFiltro}
