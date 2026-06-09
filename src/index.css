@@ -631,6 +631,21 @@ body {
   color: #991b1b;
 }
 
+.badge-em_curso {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.badge-pausado {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.badge-concluido {
+  background: #e2e8f0;
+  color: #334155;
+}
+
 .miniatura {
   width: 44px;
   height: 44px;
@@ -748,6 +763,21 @@ body {
 .campo-lote-inativo {
   color: var(--texto-suave);
   cursor: not-allowed;
+}
+
+.cliente-novo {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.cliente-novo input {
+  flex: 1;
+  min-width: 0;
+}
+
+.cliente-novo .cliente-novo-nig {
+  flex: 0 0 110px;
 }
 
 /* Campo fixo no modo "adicionar vários": cor distinta, sem aspeto de desativado */
