@@ -131,7 +131,7 @@ export function PerfilEmpresa() {
                 onClick={() => inputLogoRef.current?.click()}
                 disabled={aEnviarLogo}
               >
-                {aEnviarLogo ? 'A enviar…' : 'Mudar logótipo'}
+                {aEnviarLogo ? 'A enviar…' : 'Adicionar logomarca'}
               </button>
               <input
                 ref={inputLogoRef}
@@ -155,7 +155,7 @@ export function PerfilEmpresa() {
               value={nif}
               onChange={(e) => setNif(agrupar3(e.target.value))}
               inputMode="numeric"
-              placeholder="123 456 789"
+              placeholder="000 000 000"
               required
               disabled={!podeGerir}
             />
@@ -187,7 +187,7 @@ export function PerfilEmpresa() {
               value={telefone}
               onChange={(e) => setTelefone(agrupar3(e.target.value))}
               inputMode="numeric"
-              placeholder="912 345 678"
+              placeholder="000 000 000"
               disabled={!podeGerir}
             />
           </label>
