@@ -14,6 +14,7 @@ export function PerfilEmpresa() {
   const podeGerir = !!perfil && (perfil.nivel_acesso >= 8 || perfil.is_super_admin)
 
   const [nome, setNome] = useState('')
+  const [segmento, setSegmento] = useState('')
   const [nif, setNif] = useState('')
   const [morada, setMorada] = useState('')
   const [codigoPostal, setCodigoPostal] = useState('')
@@ -39,6 +40,7 @@ export function PerfilEmpresa() {
     const { data } = await supabase.from('empresas').select('*').eq('id', empresa.id).single()
     if (data) {
       setNome(data.nome ?? '')
+      setSegmento(data.segmento ?? '')
       setNif(agrupar3(data.nif ?? ''))
       setMorada(data.morada ?? '')
       setCodigoPostal(data.codigo_postal ?? '')
@@ -116,6 +118,7 @@ export function PerfilEmpresa() {
       .from('empresas')
       .update({
         nome,
+        segmento: segmento || null,
         nif: nif || null,
         morada: morada || null,
         codigo_postal: codigoPostal || null,
@@ -192,6 +195,14 @@ export function PerfilEmpresa() {
               disabled={!podeGerir || !editando}
             />
           </label>
+          <CampoListaInteligente
+            rotulo="Segmento / Ramo de atividade"
+            tabela="segmentos"
+            empresaId={empresa?.id ?? null}
+            valor={segmento}
+            aoMudar={setSegmento}
+            desativado={!podeGerir || !editando}
+          />
           <label>
             NIF / NIPC *
             <input

@@ -6,6 +6,7 @@ import { agrupar3 } from '../lib/constantes'
 type EmpresaRegistada = {
   id: string
   nome: string
+  segmento: string | null
   nif: string | null
   localidade: string | null
   telefone: string | null
@@ -26,7 +27,7 @@ export function GestaoEmpresas() {
     setCarregando(true)
     const { data, error } = await supabase
       .from('empresas')
-      .select('id, nome, nif, localidade, telefone, email, website, logo_url, criado_em, perfis(count)')
+      .select('id, nome, segmento, nif, localidade, telefone, email, website, logo_url, criado_em, perfis(count)')
       .order('criado_em', { ascending: false })
     if (!error && data) setEmpresas(data as EmpresaRegistada[])
     setCarregando(false)
@@ -82,6 +83,7 @@ export function GestaoEmpresas() {
               <tr>
                 <th>Logótipo</th>
                 <th>Empresa</th>
+                <th>Segmento</th>
                 <th>NIF / NIPC</th>
                 <th>Localidade</th>
                 <th>Telefone</th>
@@ -104,6 +106,7 @@ export function GestaoEmpresas() {
                   <td>
                     <strong>{e.nome}</strong>
                   </td>
+                  <td>{e.segmento ?? '—'}</td>
                   <td>{e.nif ? agrupar3(e.nif) : '—'}</td>
                   <td>{e.localidade ?? '—'}</td>
                   <td>{e.telefone ? agrupar3(e.telefone) : '—'}</td>
