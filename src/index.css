@@ -6,6 +6,7 @@
   --texto-suave: #64748b;
   --borda: #e2e8f0;
   --erro: #dc2626;
+  --altura-barra: 65px; /* altura do cabeçalho fixo (para os títulos colarem por baixo) */
 
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
   color: var(--texto);
@@ -121,6 +122,9 @@ body {
 
 /* ----- Barra superior (área autenticada) ----- */
 .barra {
+  position: sticky;
+  top: 0;
+  z-index: 35;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -473,6 +477,27 @@ body {
 
 .pagina h2 {
   margin: 8px 0 4px;
+}
+
+/* ----- Títulos fixos enquanto a secção está visível ----- */
+/* Título da página cola por baixo do cabeçalho */
+.pagina > h2,
+.pagina > .cabecalho-pagina {
+  position: sticky;
+  top: var(--altura-barra);
+  z-index: 20;
+  background: var(--cinza-fundo);
+  margin: 0;
+  padding: 8px 0;
+}
+
+/* Cabeçalho de cada secção (lista/tabela) cola e substitui o título ao rolar */
+.lista-cabecalho {
+  position: sticky;
+  top: var(--altura-barra);
+  z-index: 21;
+  background: var(--cinza-fundo);
+  padding: 8px 0;
 }
 
 .cabecalho-pagina {
