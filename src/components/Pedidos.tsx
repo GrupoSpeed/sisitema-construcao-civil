@@ -5,6 +5,8 @@ import type { FormEvent } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import type { Perfil } from '../contexts/AuthContext'
 
+const HOJE = new Date().toISOString().slice(0, 10)
+
 type Projeto = { id: string; nome: string; nr_projeto: string | null }
 type Produto = {
   id: string
@@ -37,6 +39,7 @@ type PedidoItem = {
 type Pedido = {
   id: string
   estado: string
+  urgente: boolean
   data_necessidade: string | null
   observacao: string | null
   criado_em: string
@@ -63,6 +66,7 @@ export function Pedidos({ perfil }: { perfil: Perfil }) {
   // Formulário do novo pedido
   const [projetoId, setProjetoId] = useState('')
   const [dataNecessidade, setDataNecessidade] = useState('')
+  const [urgente, setUrgente] = useState(false)
   const [observacao, setObservacao] = useState('')
   const [carrinho, setCarrinho] = useState<ItemCarrinho[]>([])
   const [alvoCancelar, setAlvoCancelar] = useState<{ item: PedidoItem; pedido: Pedido } | null>(null)
@@ -83,7 +87,7 @@ export function Pedidos({ perfil }: { perfil: Perfil }) {
       supabase
         .from('pedidos_material')
         .select(
-          'id, estado, data_necessidade, observacao, criado_em, projetos(nome, nr_projeto), pedido_itens(id, quantidade, unidade, observacao, estado, produtos(nome, foto_url))',
+          'id, estado, urgente, data_necessidade, observacao, criado_em, projetos(nome, nr_projeto), pedido_itens(id, quantidade, unidade, observacao, estado, produtos(nome, foto_url))',
         )
         .eq('solicitado_por', perfil.id)
         .order('criado_em', { ascending: false }),
@@ -133,6 +137,7 @@ export function Pedidos({ perfil }: { perfil: Perfil }) {
     setDataNecessidade('')
     setObservacao('')
     setCarrinho([])
+    setUrgente(false)
   }
 
   async function enviar(evento: FormEvent) {
@@ -161,6 +166,7 @@ export function Pedidos({ perfil }: { perfil: Perfil }) {
         solicitado_por: perfil.id,
         estado: 'pendente',
         data_necessidade: dataNecessidade || null,
+        urgente,
         observacao: observacao || null,
       })
       .select('id')
@@ -260,7 +266,7 @@ export function Pedidos({ perfil }: { perfil: Perfil }) {
             </label>
             <label>
               Data de necessidade
-              <input type="date" value={dataNecessidade} onChange={(e) => setDataNecessidade(e.target.value)} />
+              <input type="date" min={HOJE} value={dataNecessidade} onChange={(e) => setDataNecessidade(e.target.value)} />
             </label>
             <label>
               Observação (opcional)
@@ -402,6 +408,14 @@ export function Pedidos({ perfil }: { perfil: Perfil }) {
             </div>
           )}
 
+          <button
+            type="button"
+            className={'botao-urgencia' + (urgente ? ' botao-urgencia-on' : '')}
+            onClick={() => setUrgente((v) => !v)}
+          >
+            🚨 {urgente ? 'Pedido URGENTE (clica para tirar)' : 'Marcar como urgente'}
+          </button>
+
           {mensagem && <div className="mensagem">{mensagem}</div>}
           <div className="form-botoes">
             <button type="submit" disabled={aGuardar}>
@@ -443,7 +457,10 @@ export function Pedidos({ perfil }: { perfil: Perfil }) {
                       {p.data_necessidade ? ` · necessário até ${dataPt(p.data_necessidade)}` : ''}
                     </span>
                   </div>
-                  <span className={'badge badge-' + p.estado}>{p.estado}</span>
+                  <div className="cartao-pedido-badges">
+                    {p.urgente && <span className="badge badge-urgente">🚨 Urgente</span>}
+                    <span className={'badge badge-' + p.estado}>{p.estado}</span>
+                  </div>
                 </div>
                 <ul className="cartao-pedido-itens">
                   {p.pedido_itens.map((it) => (

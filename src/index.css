@@ -1106,6 +1106,37 @@ body {
   color: var(--texto-suave);
 }
 
+.cartao-pedido-badges {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.badge-urgente {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.botao-urgencia {
+  margin-top: 14px;
+  padding: 9px 14px;
+  background: #fff;
+  color: var(--erro);
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.botao-urgencia-on {
+  background: var(--erro);
+  color: #fff;
+  border-color: var(--erro);
+}
+
 .cartao-pedido-acoes {
   display: flex;
   gap: 8px;

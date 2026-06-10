@@ -211,9 +211,7 @@ export function ListaMateriais({ perfil }: { perfil: Perfil }) {
   }
 
   function projetoTexto(i: Item): string {
-    const p = i.pedido?.projetos
-    if (!p) return '—'
-    return p.nr_projeto ? `${p.nr_projeto} — ${p.nome}` : p.nome
+    return i.pedido?.projetos?.nome ?? '—'
   }
 
   function solicitanteTexto(i: Item): string {
