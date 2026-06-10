@@ -21,28 +21,21 @@ type Movimento = {
 
 const FORM_VAZIO = {
   numero_fatura: '',
-  fornecedor_nig: '',
   fornecedor_id: '',
   centro_custo: '',
-  movimento: '',
-  cod_movimento: '',
-  tipo_custo: '',
-  desc_movimento: '',
+  movimento: '', // Entrada / Saída
+  tipo_custo: '', // Fixo / Variável
   projeto_id: '',
   categoria: '',
   tipo_documento: '',
   fornecedor_obs: '',
   data_emissao: '',
   data_vencimento: '',
-  prazo_pagamento: '',
   valor_liquido: '',
   iva: '',
-  data_pagamento: '',
-  tipo_pagamento: '',
-  obs: '',
-  valor_pago: '',
   metodo_pagamento: '',
   conta_bancaria: '',
+  obs: '',
 }
 
 function dataPt(iso: string | null): string {
@@ -106,27 +99,20 @@ export function Movimentos({ perfil }: { perfil: Perfil }) {
       empresa_id: perfil.empresa_id,
       criado_por: perfil.id,
       numero_fatura: form.numero_fatura || null,
-      fornecedor_nig: form.fornecedor_nig || null,
       fornecedor_id: form.fornecedor_id || null,
       centro_custo: form.centro_custo || null,
       movimento: form.movimento || null,
-      cod_movimento: form.cod_movimento || null,
       tipo_custo: form.tipo_custo || null,
-      desc_movimento: form.desc_movimento || null,
       projeto_id: form.projeto_id || null,
       categoria: form.categoria || null,
       tipo_documento: form.tipo_documento || null,
       fornecedor_obs: form.fornecedor_obs || null,
       data_emissao: form.data_emissao || null,
       data_vencimento: form.data_vencimento || null,
-      prazo_pagamento: form.prazo_pagamento || null,
       valor_liquido: form.valor_liquido ? Number(form.valor_liquido) : null,
       iva: form.iva ? Number(form.iva) : null,
       valor_bruto: valorBruto || null,
-      data_pagamento: form.data_pagamento || null,
-      tipo_pagamento: form.tipo_pagamento || null,
       obs: form.obs || null,
-      valor_pago: form.valor_pago ? Number(form.valor_pago) : null,
       metodo_pagamento: form.metodo_pagamento || null,
       conta_bancaria: form.conta_bancaria || null,
     })
@@ -176,10 +162,6 @@ export function Movimentos({ perfil }: { perfil: Perfil }) {
             <input value={form.numero_fatura} onChange={(e) => mudar('numero_fatura', e.target.value)} required />
           </label>
           <label>
-            NIG do fornecedor
-            <input value={form.fornecedor_nig} onChange={(e) => mudar('fornecedor_nig', e.target.value)} />
-          </label>
-          <label>
             Fornecedor
             <select value={form.fornecedor_id} onChange={(e) => mudar('fornecedor_id', e.target.value)}>
               <option value="">(escolher)</option>
@@ -196,15 +178,27 @@ export function Movimentos({ perfil }: { perfil: Perfil }) {
         <h3 className="seccao-form">Dados contabilísticos</h3>
         <div className="grelha-form">
           <CampoListaInteligente rotulo="Centro de custo" tabela="centros_custo" empresaId={perfil.empresa_id} valor={form.centro_custo} aoMudar={(v) => mudar('centro_custo', v)} />
-          <CampoListaInteligente rotulo="Movimento" tabela="mov_tipos" empresaId={perfil.empresa_id} valor={form.movimento} aoMudar={(v) => mudar('movimento', v)} />
           <label>
-            Cód. do movimento
-            <input value={form.cod_movimento} onChange={(e) => mudar('cod_movimento', e.target.value)} />
+            Movimento
+            <select value={form.movimento} onChange={(e) => mudar('movimento', e.target.value)}>
+              <option value="">(escolher)</option>
+              <option value="Entrada">Entrada</option>
+              <option value="Saída">Saída</option>
+            </select>
           </label>
-          <CampoListaInteligente rotulo="Tipo de custo" tabela="tipos_custo" empresaId={perfil.empresa_id} valor={form.tipo_custo} aoMudar={(v) => mudar('tipo_custo', v)} />
           <label>
-            Descrição do movimento
-            <input value={form.desc_movimento} onChange={(e) => mudar('desc_movimento', e.target.value)} />
+            Tipo de custo
+            <select
+              value={form.tipo_custo}
+              onChange={(e) => {
+                mudar('tipo_custo', e.target.value)
+                mudar('categoria', '') // a categoria depende do tipo de custo
+              }}
+            >
+              <option value="">(escolher)</option>
+              <option value="Fixo">Fixo</option>
+              <option value="Variável">Variável</option>
+            </select>
           </label>
         </div>
 
@@ -226,7 +220,7 @@ export function Movimentos({ perfil }: { perfil: Perfil }) {
             Cliente do projeto
             <input value={projetoSel?.clientes?.nome ?? '—'} disabled />
           </label>
-          <CampoListaInteligente rotulo="Categoria" tabela="categorias_mov" empresaId={perfil.empresa_id} valor={form.categoria} aoMudar={(v) => mudar('categoria', v)} />
+          <CampoListaInteligente rotulo="Categoria" tabela="categorias_mov" empresaId={perfil.empresa_id} valor={form.categoria} aoMudar={(v) => mudar('categoria', v)} filtroColuna="tipo" filtroValor={form.tipo_custo} />
           <CampoListaInteligente rotulo="Tipo de documento" tabela="tipos_documento" empresaId={perfil.empresa_id} valor={form.tipo_documento} aoMudar={(v) => mudar('tipo_documento', v)} />
           <label>
             Fornecedor / Obs
@@ -239,10 +233,6 @@ export function Movimentos({ perfil }: { perfil: Perfil }) {
           <label>
             Data de vencimento
             <input type="date" value={form.data_vencimento} onChange={(e) => mudar('data_vencimento', e.target.value)} />
-          </label>
-          <label>
-            Prazo de pagamento
-            <input value={form.prazo_pagamento} onChange={(e) => mudar('prazo_pagamento', e.target.value)} placeholder="Ex: 30 dias" />
           </label>
           <label>
             Valor líquido (€)
@@ -258,18 +248,9 @@ export function Movimentos({ perfil }: { perfil: Perfil }) {
           </label>
         </div>
 
-        {/* Pagamento */}
+        {/* Pagamento (os pagamentos — total/parcial e "pronto pagamento" — entram na próxima etapa) */}
         <h3 className="seccao-form">Pagamento</h3>
         <div className="grelha-form">
-          <label>
-            Data de pagamento
-            <input type="date" value={form.data_pagamento} onChange={(e) => mudar('data_pagamento', e.target.value)} />
-          </label>
-          <CampoListaInteligente rotulo="Tipo de pagamento" tabela="tipos_pagamento" empresaId={perfil.empresa_id} valor={form.tipo_pagamento} aoMudar={(v) => mudar('tipo_pagamento', v)} />
-          <label>
-            Valor pago (€)
-            <input type="number" step="0.01" value={form.valor_pago} onChange={(e) => mudar('valor_pago', e.target.value)} />
-          </label>
           <label>
             Método de pagamento
             <select value={form.metodo_pagamento} onChange={(e) => mudar('metodo_pagamento', e.target.value)}>
