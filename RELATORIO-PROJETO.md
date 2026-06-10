@@ -31,9 +31,12 @@ São **11 módulos** no total. Estamos a construir o **1.º: Módulo de Materiai
 - **Obras → Projetos:** termo genérico (multi-segmento). Tabela `projetos`, coluna `pedidos_material.projeto_id`.
 - **NIG** = Número de Identificação no Grupo (id do cliente). Mostrado como `nig - nome`.
 
-### Fluxo do Módulo de Materiais (modelo do cliente — por item)
+### Fluxo do Módulo de Materiais (modelo do cliente — por ITEM, não por pedido)
+Baseado no protótipo FlutterFlow do cliente: gestão numa **lista única por item com abas de estado**.
 **Solicitar** (colaborador N2) → **Reservar** (encarregado N3, ✓) → **Comprar** (Comprador: fornecedor + valor + método Dinheiro/Cartão/Outros + foto do recibo) → **Validar** (escritório N4+).
 Estados do item: `solicitado → reservado → comprado → validado` (ou `rejeitado`).
+O colaborador pode **cancelar item a item** em "Os meus pedidos" enquanto está "solicitado".
+O **processo completo do escritório** (na Validação: conta bancária específica, etc.) está simplificado e fica para a próxima etapa.
 
 ## 4. O que já está FEITO ✅
 
@@ -43,7 +46,7 @@ Estados do item: `solicitado → reservado → comprado → validado` (ou `rejei
 - `12_setores_unidades.sql` — setor/unidade por segmento. `13` — sementes categorias/marcas. `14_categorias_por_setor.sql` — categoria pertence ao setor.
 - `15_obras_para_projetos.sql` (rename). `16_clientes_projetos.sql` — mini-CRM clientes + campos do mapa de projetos.
 - `17_pedidos.sql` — `pedidos_material` + `pedido_itens` (projeto_id). `18_itens_compra.sql` — colunas reserva/compra + contas + bucket `recibos`. `19_metodo_pagamento.sql`.
-> ⚠️ Confirmar que `17`, `18`, `19` foram corridos (alguns estavam por correr).
+> ✅ Todos os SQL `01`–`19` confirmados como corridos no Supabase (2026-06-10).
 
 **Funcionalidades (React)**
 - ✅ Login + `AuthContext` (perfil/empresa). Barra de topo **fixa** + menu ☰ por permissão. Rodapé fixo (RGPD). Títulos de secção fixos ao rolar.
