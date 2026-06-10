@@ -18,7 +18,7 @@ type Item = {
   metodo_pagamento: string | null
   recibo_url: string | null
   motivo_rejeicao: string | null
-  produtos: { nome: string; setor: string | null } | null
+  produtos: { nome: string; setor: string | null; foto_url: string | null } | null
   fornecedores: { nome: string } | null
   pedido: {
     data_necessidade: string | null
@@ -53,6 +53,7 @@ export function ListaMateriais({ perfil }: { perfil: Perfil }) {
   const [aba, setAba] = useState<string>('solicitado')
   const [filtroProjeto, setFiltroProjeto] = useState('')
   const [filtroSetor, setFiltroSetor] = useState('')
+  const [filtroFornecedor, setFiltroFornecedor] = useState('')
 
   // Modal comprar
   const [itemComprar, setItemComprar] = useState<Item | null>(null)
@@ -78,7 +79,7 @@ export function ListaMateriais({ perfil }: { perfil: Perfil }) {
       supabase
         .from('pedido_itens')
         .select(
-          'id, quantidade, unidade, observacao, estado, valor_pago, metodo_pagamento, recibo_url, motivo_rejeicao, produtos(nome, setor), fornecedores(nome), pedido:pedidos_material!inner(data_necessidade, observacao, projetos(nome, nr_projeto), solicitante:perfis!solicitado_por(nome, nivel_acesso, is_super_admin))',
+          'id, quantidade, unidade, observacao, estado, valor_pago, metodo_pagamento, recibo_url, motivo_rejeicao, produtos(nome, setor, foto_url), fornecedores(nome), pedido:pedidos_material!inner(data_necessidade, observacao, projetos(nome, nr_projeto), solicitante:perfis!solicitado_por(nome, nivel_acesso, is_super_admin))',
         )
         .order('criado_em', { ascending: false }),
       supabase.from('fornecedores').select('id, nome').order('nome'),
@@ -193,12 +194,16 @@ export function ListaMateriais({ perfil }: { perfil: Perfil }) {
   const projetosDistintos = [
     ...new Set(itens.map((i) => i.pedido?.projetos?.nome).filter(Boolean)),
   ] as string[]
+  const fornecedoresDistintos = [
+    ...new Set(itens.map((i) => i.fornecedores?.nome).filter(Boolean)),
+  ] as string[]
 
   const itensFiltrados = itens.filter((i) => {
     const okAba = aba === 'tudo' || i.estado === aba
     const okProjeto = !filtroProjeto || i.pedido?.projetos?.nome === filtroProjeto
     const okSetor = !filtroSetor || i.produtos?.setor === filtroSetor
-    return okAba && okProjeto && okSetor
+    const okFornecedor = !filtroFornecedor || i.fornecedores?.nome === filtroFornecedor
+    return okAba && okProjeto && okSetor && okFornecedor
   })
 
   function contar(estado: string): number {
@@ -257,6 +262,14 @@ export function ListaMateriais({ perfil }: { perfil: Perfil }) {
                 </option>
               ))}
             </select>
+            <select value={filtroFornecedor} onChange={(e) => setFiltroFornecedor(e.target.value)}>
+              <option value="">Todos os fornecedores</option>
+              {fornecedoresDistintos.map((f) => (
+                <option key={f} value={f}>
+                  {f}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -271,8 +284,7 @@ export function ListaMateriais({ perfil }: { perfil: Perfil }) {
             <table className="tabela">
               <thead>
                 <tr>
-                  <th>Solicitante</th>
-                  <th>Projeto</th>
+                  <th>Foto</th>
                   <th>Material</th>
                   <th>Setor</th>
                   <th>Qtd</th>
@@ -280,14 +292,21 @@ export function ListaMateriais({ perfil }: { perfil: Perfil }) {
                   <th>Fornecedor</th>
                   <th>Valor</th>
                   <th>Estado</th>
+                  <th>Solicitante</th>
+                  <th>Projeto</th>
                   <th>Ação</th>
                 </tr>
               </thead>
               <tbody>
                 {itensFiltrados.map((i) => (
                   <tr key={i.id}>
-                    <td>{i.pedido?.solicitante?.nome ?? '—'}</td>
-                    <td>{projetoTexto(i)}</td>
+                    <td>
+                      {i.produtos?.foto_url ? (
+                        <img className="miniatura" src={i.produtos.foto_url} alt="" />
+                      ) : (
+                        <span className="miniatura-vazia">—</span>
+                      )}
+                    </td>
                     <td>
                       {i.produtos?.nome ?? 'Produto'}
                       {i.observacao ? ` — ${i.observacao}` : ''}
@@ -303,6 +322,8 @@ export function ListaMateriais({ perfil }: { perfil: Perfil }) {
                     <td>
                       <span className={'badge badge-' + i.estado}>{i.estado}</span>
                     </td>
+                    <td>{i.pedido?.solicitante?.nome ?? '—'}</td>
+                    <td>{projetoTexto(i)}</td>
                     <td>
                       <div className="acoes-celula">
                         <button type="button" className="botao-acao" onClick={() => setItemDetalhe(i)}>
