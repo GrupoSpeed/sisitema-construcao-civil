@@ -6,7 +6,20 @@ import { capitalizarPalavras } from '../lib/constantes'
 
 type Props = {
   rotulo: string
-  tabela: 'categorias' | 'marcas' | 'localidades' | 'segmentos' | 'setores' | 'unidades'
+  tabela:
+    | 'categorias'
+    | 'marcas'
+    | 'localidades'
+    | 'segmentos'
+    | 'setores'
+    | 'unidades'
+    | 'centros_custo'
+    | 'mov_tipos'
+    | 'tipos_custo'
+    | 'tipos_documento'
+    | 'categorias_mov'
+    | 'tipos_pagamento'
+    | 'contas_bancarias'
   empresaId: string | null
   valor: string
   aoMudar: (valor: string) => void

@@ -891,6 +891,12 @@ body {
   margin-top: 14px;
 }
 
+.seccao-form {
+  margin: 22px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--borda);
+}
+
 .pesquisa-produto {
   width: 100%;
   box-sizing: border-box;
