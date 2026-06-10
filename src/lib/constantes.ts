@@ -32,6 +32,29 @@ export function capitalizarPalavras(texto: string): string {
     .replace(/(^|\s)\p{L}/gu, (letra) => letra.toUpperCase())
 }
 
+// Máscara de valor em euros: o utilizador escreve só dígitos (cêntimos), sem , nem .
+// Ex.: "1250" -> "12,50". Devolve string formatada (decimal com vírgula).
+export function formatarValor(raw: string): string {
+  const digitos = raw.replace(/\D/g, '')
+  if (!digitos) return ''
+  const num = parseInt(digitos, 10) / 100
+  return num.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+// Converte o valor formatado ("12,50") para número (12.5). Vazio -> null.
+export function valorParaNumero(formatado: string): number | null {
+  if (!formatado.trim()) return null
+  const limpo = formatado.replace(/\s/g, '').replace(/\./g, '').replace(',', '.')
+  const n = Number(limpo)
+  return Number.isNaN(n) ? null : n
+}
+
+// Converte um número (12.5) para o formato de exibição ("12,50"). Para preencher na edição.
+export function numeroParaValor(n: number | null | undefined): string {
+  if (n == null) return ''
+  return n.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
 // Formata o código postal português: 4 dígitos + "-" + 3 dígitos (ex: 1234-567)
 export function formatarCodigoPostal(texto: string): string {
   const digitos = texto.replace(/\D/g, '').slice(0, 7)

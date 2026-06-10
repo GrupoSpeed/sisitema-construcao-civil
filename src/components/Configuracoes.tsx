@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import type { Perfil } from '../contexts/AuthContext'
 import { GestaoLista } from './GestaoLista'
+import { LigacaoContas } from './LigacaoContas'
 
 type ListaConfig = {
   tabela: string
@@ -15,6 +16,7 @@ const LISTAS: ListaConfig[] = [
   { tabela: 'centros_custo', rotulo: 'Centros de custo' },
   { tabela: 'tipos_documento', rotulo: 'Tipos de documento' },
   { tabela: 'contas_bancarias', rotulo: 'Contas bancárias' },
+  { tabela: 'ligacao_contas', rotulo: 'Contas por centro de custo' },
   {
     tabela: 'categorias_mov',
     rotulo: 'Categorias de movimento',
@@ -48,8 +50,8 @@ export function Configuracoes({ perfil }: { perfil: Perfil }) {
       <h2>Configurações</h2>
       <p className="subtexto">Gere as listas usadas no sistema. Já vêm preenchidas; podes adicionar ou remover.</p>
 
-      <label>
-        Que lista queres gerir?
+      <div className="escolher-lista">
+        <span>Que lista queres gerir?</span>
         <select value={sel} onChange={(e) => setSel(e.target.value)} className="select-lista-config">
           {LISTAS.map((l) => (
             <option key={l.tabela} value={l.tabela}>
@@ -57,17 +59,21 @@ export function Configuracoes({ perfil }: { perfil: Perfil }) {
             </option>
           ))}
         </select>
-      </label>
+      </div>
 
       {atual.nota && <p className="subtexto">{atual.nota}</p>}
 
-      <GestaoLista
-        key={atual.tabela}
-        tabela={atual.tabela}
-        empresaId={perfil.empresa_id}
-        grupoCampo={atual.grupoCampo}
-        grupos={atual.grupos}
-      />
+      {atual.tabela === 'ligacao_contas' ? (
+        <LigacaoContas empresaId={perfil.empresa_id} />
+      ) : (
+        <GestaoLista
+          key={atual.tabela}
+          tabela={atual.tabela}
+          empresaId={perfil.empresa_id}
+          grupoCampo={atual.grupoCampo}
+          grupos={atual.grupos}
+        />
+      )}
     </div>
   )
 }

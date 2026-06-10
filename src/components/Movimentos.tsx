@@ -65,6 +65,8 @@ export function Movimentos({ perfil }: { perfil: Perfil }) {
   const [form, setForm] = useState({ ...FORM_VAZIO })
   const [prontoPagamento, setProntoPagamento] = useState(false)
   const [contas, setContas] = useState<Conta[]>([])
+  const [centrosLista, setCentrosLista] = useState<Conta[]>([])
+  const [ligacoes, setLigacoes] = useState<{ centro_custo_id: string; conta_id: string }[]>([])
 
   // Modal de pagamentos de um movimento
   const [movPagar, setMovPagar] = useState<Movimento | null>(null)
@@ -101,10 +103,12 @@ export function Movimentos({ perfil }: { perfil: Perfil }) {
 
   async function carregar() {
     setCarregando(true)
-    const [resProj, resForn, resContas, resMov] = await Promise.all([
+    const [resProj, resForn, resContas, resCentros, resLig, resMov] = await Promise.all([
       supabase.from('projetos').select('id, nome, nr_projeto, clientes(nome, nig)').order('nome'),
       supabase.from('fornecedores').select('id, nome').order('nome'),
       supabase.from('contas_bancarias').select('id, nome').order('nome'),
+      supabase.from('centros_custo').select('id, nome').order('nome'),
+      supabase.from('centro_conta').select('centro_custo_id, conta_id'),
       supabase
         .from('movimentos')
         .select(
@@ -115,6 +119,8 @@ export function Movimentos({ perfil }: { perfil: Perfil }) {
     if (resProj.data) setProjetos(resProj.data as unknown as Projeto[])
     if (resForn.data) setFornecedores(resForn.data as Fornecedor[])
     if (resContas.data) setContas(resContas.data as Conta[])
+    if (resCentros.data) setCentrosLista(resCentros.data as Conta[])
+    if (resLig.data) setLigacoes(resLig.data as { centro_custo_id: string; conta_id: string }[])
     if (resMov.data) setMovimentos(resMov.data as unknown as Movimento[])
     setCarregando(false)
   }
@@ -129,6 +135,15 @@ export function Movimentos({ perfil }: { perfil: Perfil }) {
   const valorBruto = liquido > 0 ? liquido * (1 + ivaPct / 100) : 0
 
   const projetoSel = projetos.find((p) => p.id === form.projeto_id)
+
+  // Contas ligadas ao centro de custo escolhido (pelo nome do centro guardado no form)
+  function contasDoCentro(centroNome: string): Conta[] {
+    if (centroNome === 'Geral') return contas // o "Geral" inclui sempre todas as contas
+    const centro = centrosLista.find((c) => c.nome === centroNome)
+    if (!centro) return []
+    const ids = ligacoes.filter((l) => l.centro_custo_id === centro.id).map((l) => l.conta_id)
+    return contas.filter((c) => ids.includes(c.id))
+  }
 
   async function guardar(evento: FormEvent) {
     evento.preventDefault()
@@ -274,7 +289,16 @@ export function Movimentos({ perfil }: { perfil: Perfil }) {
         {/* Dados Contabilísticos */}
         <h3 className="seccao-form">Dados contabilísticos</h3>
         <div className="grelha-form">
-          <CampoListaInteligente rotulo="Centro de custo" tabela="centros_custo" empresaId={perfil.empresa_id} valor={form.centro_custo} aoMudar={(v) => mudar('centro_custo', v)} />
+          <CampoListaInteligente
+            rotulo="Centro de custo"
+            tabela="centros_custo"
+            empresaId={perfil.empresa_id}
+            valor={form.centro_custo}
+            aoMudar={(v) => {
+              mudar('centro_custo', v)
+              mudar('conta_bancaria', '') // a conta depende do centro de custo
+            }}
+          />
           <label>
             Movimento
             <select value={form.movimento} onChange={(e) => mudar('movimento', e.target.value)}>
@@ -358,7 +382,23 @@ export function Movimentos({ perfil }: { perfil: Perfil }) {
               <option value="Outros">Outros</option>
             </select>
           </label>
-          <CampoListaInteligente rotulo="Conta bancária" tabela="contas_bancarias" empresaId={perfil.empresa_id} valor={form.conta_bancaria} aoMudar={(v) => mudar('conta_bancaria', v)} />
+          <label>
+            Conta bancária
+            <select
+              value={form.conta_bancaria}
+              onChange={(e) => mudar('conta_bancaria', e.target.value)}
+              disabled={!form.centro_custo}
+            >
+              <option value="">
+                {form.centro_custo ? '(escolher)' : '(escolhe primeiro o centro de custo)'}
+              </option>
+              {contasDoCentro(form.centro_custo).map((c) => (
+                <option key={c.id} value={c.nome}>
+                  {c.nome}
+                </option>
+              ))}
+            </select>
+          </label>
           <label>
             Observação
             <input value={form.obs} onChange={(e) => mudar('obs', e.target.value)} />

@@ -891,8 +891,24 @@ body {
   margin-top: 14px;
 }
 
-.select-lista-config {
+.escolher-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   max-width: 360px;
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.select-lista-config {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  font-size: 14px;
+  background: #fff;
 }
 
 .lista-config {
@@ -914,6 +930,23 @@ body {
   border-radius: 8px;
   background: #fff;
   font-size: 14px;
+}
+
+/* Botão eliminar — só ícone (sobrepõe o estilo de botão do cartão) */
+.lista-config li button {
+  margin: 0;
+  width: auto;
+  padding: 2px 6px;
+  background: transparent;
+  border: none;
+  color: var(--erro);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.lista-config li button:hover {
+  color: #b91c1c;
 }
 
 .seccao-form {
@@ -1317,8 +1350,16 @@ select.select-bloqueado:disabled {
   background: #fff;
 }
 
+/* Campo de pesquisa — formato único em todo o sistema (igual ao modelo) */
+.filtros input.filtro-texto,
+.cartao-form input.filtro-texto,
 .filtro-texto {
-  min-width: 180px;
+  min-width: 220px;
+  padding: 10px 12px;
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  font-size: 14px;
+  background: #fff;
 }
 
 /* ----- Sugestões (autocomplete) do campo Produto ----- */

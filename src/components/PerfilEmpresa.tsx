@@ -15,6 +15,7 @@ export function PerfilEmpresa() {
 
   const [nome, setNome] = useState('')
   const [segmento, setSegmento] = useState('')
+  const [segmentoOriginal, setSegmentoOriginal] = useState('')
   const [nif, setNif] = useState('')
   const [morada, setMorada] = useState('')
   const [codigoPostal, setCodigoPostal] = useState('')
@@ -41,6 +42,7 @@ export function PerfilEmpresa() {
     if (data) {
       setNome(data.nome ?? '')
       setSegmento(data.segmento ?? '')
+      setSegmentoOriginal(data.segmento ?? '')
       setNif(agrupar3(data.nif ?? ''))
       setMorada(data.morada ?? '')
       setCodigoPostal(data.codigo_postal ?? '')
@@ -195,14 +197,19 @@ export function PerfilEmpresa() {
               disabled={!podeGerir || !editando}
             />
           </label>
-          <CampoListaInteligente
-            rotulo="Segmento / Ramo de atividade"
-            tabela="segmentos"
-            empresaId={empresa?.id ?? null}
-            valor={segmento}
-            aoMudar={setSegmento}
-            desativado={!podeGerir || !editando}
-          />
+          <div>
+            <CampoListaInteligente
+              rotulo="Segmento / Ramo de atividade"
+              tabela="segmentos"
+              empresaId={empresa?.id ?? null}
+              valor={segmento}
+              aoMudar={setSegmento}
+              desativado={!podeGerir || !editando || !!segmentoOriginal}
+            />
+            {!!segmentoOriginal && (
+              <small className="subtexto">🔒 O segmento é definido uma vez e não se altera.</small>
+            )}
+          </div>
           <label>
             NIF / NIPC *
             <input

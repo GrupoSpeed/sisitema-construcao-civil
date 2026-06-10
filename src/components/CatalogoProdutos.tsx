@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabaseClient'
 import type { Perfil } from '../contexts/AuthContext'
 import { CampoListaInteligente } from './CampoListaInteligente'
 import { SeletorFornecedores, type FornecedorSel } from './SeletorFornecedores'
+import { formatarValor, valorParaNumero, numeroParaValor } from '../lib/constantes'
 
 type Produto = {
   id: string
@@ -130,7 +131,7 @@ export function CatalogoProdutos({ perfil }: { perfil: Perfil }) {
       unidade,
       categoria: categoria || null,
       marca: marca || null,
-      valor_referencia: valorRef ? Number(valorRef) : null,
+      valor_referencia: valorParaNumero(valorRef),
       foto_url: fotoUrl,
       // Só o escritório pode mudar o estado (validação), e só ao editar
       ...(editandoId && podeValidar ? { estado } : {}),
@@ -240,7 +241,7 @@ export function CatalogoProdutos({ perfil }: { perfil: Perfil }) {
     setUnidade(p.unidade)
     setCategoria(p.categoria ?? '')
     setMarca(p.marca ?? '')
-    setValorRef(p.valor_referencia != null ? String(p.valor_referencia) : '')
+    setValorRef(numeroParaValor(p.valor_referencia))
     setEstado(p.estado)
     setFornecedoresSel(
       (p.produto_fornecedores ?? [])
@@ -436,11 +437,10 @@ export function CatalogoProdutos({ perfil }: { perfil: Perfil }) {
           <label>
             Valor de referência (€)
             <input
-              type="number"
-              step="0.01"
               value={valorRef}
-              onChange={(e) => setValorRef(e.target.value)}
-              placeholder="Ex: 4.50 (opcional)"
+              onChange={(e) => setValorRef(formatarValor(e.target.value))}
+              inputMode="numeric"
+              placeholder="Ex: 4,50 (escreve só números)"
             />
           </label>
 
