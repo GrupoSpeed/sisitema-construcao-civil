@@ -38,21 +38,21 @@ export function formatarValor(raw: string): string {
   const digitos = raw.replace(/\D/g, '')
   if (!digitos) return ''
   const num = parseInt(digitos, 10) / 100
-  return num.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return num.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
 }
 
-// Converte o valor formatado ("12,50") para número (12.5). Vazio -> null.
+// Converte o valor formatado ("12,50 €") para número (12.5). Vazio -> null.
 export function valorParaNumero(formatado: string): number | null {
   if (!formatado.trim()) return null
-  const limpo = formatado.replace(/\s/g, '').replace(/\./g, '').replace(',', '.')
+  const limpo = formatado.replace(/[^\d,]/g, '').replace(',', '.')
   const n = Number(limpo)
   return Number.isNaN(n) ? null : n
 }
 
-// Converte um número (12.5) para o formato de exibição ("12,50"). Para preencher na edição.
+// Converte um número (12.5) para o formato de exibição ("12,50 €"). Para preencher na edição.
 export function numeroParaValor(n: number | null | undefined): string {
   if (n == null) return ''
-  return n.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return n.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
 }
 
 // Formata o código postal português: 4 dígitos + "-" + 3 dígitos (ex: 1234-567)

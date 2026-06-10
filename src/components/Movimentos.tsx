@@ -5,6 +5,9 @@ import type { FormEvent } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import type { Perfil } from '../contexts/AuthContext'
 import { CampoListaInteligente } from './CampoListaInteligente'
+import { formatarValor, valorParaNumero, numeroParaValor } from '../lib/constantes'
+
+const HOJE = new Date().toISOString().slice(0, 10)
 
 type Projeto = { id: string; nome: string; nr_projeto: string | null; clientes: { nome: string; nig: string | null } | null }
 type Fornecedor = { id: string; nome: string }
@@ -64,6 +67,8 @@ export function Movimentos({ perfil }: { perfil: Perfil }) {
   const [mensagem, setMensagem] = useState<string | null>(null)
   const [form, setForm] = useState({ ...FORM_VAZIO })
   const [prontoPagamento, setProntoPagamento] = useState(false)
+  const [mostrarPagamento, setMostrarPagamento] = useState(false)
+  const [filtroTexto, setFiltroTexto] = useState('')
   const [contas, setContas] = useState<Conta[]>([])
   const [centrosLista, setCentrosLista] = useState<Conta[]>([])
   const [ligacoes, setLigacoes] = useState<{ centro_custo_id: string; conta_id: string }[]>([])
@@ -130,7 +135,7 @@ export function Movimentos({ perfil }: { perfil: Perfil }) {
   }, [])
 
   // Valor Bruto = Líquido + IVA(%)
-  const liquido = Number(form.valor_liquido) || 0
+  const liquido = valorParaNumero(form.valor_liquido) || 0
   const ivaPct = Number(form.iva) || 0
   const valorBruto = liquido > 0 ? liquido * (1 + ivaPct / 100) : 0
 
@@ -144,6 +149,16 @@ export function Movimentos({ perfil }: { perfil: Perfil }) {
     const ids = ligacoes.filter((l) => l.centro_custo_id === centro.id).map((l) => l.conta_id)
     return contas.filter((c) => ids.includes(c.id))
   }
+
+  // Faturas filtradas pela pesquisa (nº fatura, fornecedor, projeto)
+  const termoBusca = filtroTexto.trim().toLowerCase()
+  const movimentosFiltrados = movimentos.filter(
+    (m) =>
+      !termoBusca ||
+      (m.numero_fatura ?? '').toLowerCase().includes(termoBusca) ||
+      (m.fornecedores?.nome ?? '').toLowerCase().includes(termoBusca) ||
+      (m.projetos?.nome ?? '').toLowerCase().includes(termoBusca),
+  )
 
   async function guardar(evento: FormEvent) {
     evento.preventDefault()
@@ -169,7 +184,7 @@ export function Movimentos({ perfil }: { perfil: Perfil }) {
         fornecedor_obs: form.fornecedor_obs || null,
         data_emissao: form.data_emissao || null,
         data_vencimento: form.data_vencimento || null,
-        valor_liquido: form.valor_liquido ? Number(form.valor_liquido) : null,
+        valor_liquido: valorParaNumero(form.valor_liquido),
         iva: form.iva ? Number(form.iva) : null,
         valor_bruto: valorBruto || null,
         obs: form.obs || null,
@@ -205,7 +220,7 @@ export function Movimentos({ perfil }: { perfil: Perfil }) {
 
   function abrirPagar(m: Movimento) {
     setMovPagar(m)
-    setPagValor(saldoDe(m) > 0 ? saldoDe(m).toFixed(2) : '')
+    setPagValor(saldoDe(m) > 0 ? numeroParaValor(saldoDe(m)) : '')
     setPagMetodo('')
     setPagConta('')
     setPagData(new Date().toISOString().slice(0, 10))
@@ -213,7 +228,7 @@ export function Movimentos({ perfil }: { perfil: Perfil }) {
 
   async function adicionarPagamento() {
     if (!movPagar) return
-    const valor = Number(pagValor)
+    const valor = valorParaNumero(pagValor) ?? 0
     if (!valor || valor <= 0) {
       setMensagem('⚠️ Indica um valor de pagamento válido.')
       return
@@ -253,21 +268,8 @@ export function Movimentos({ perfil }: { perfil: Perfil }) {
       <p className="subtexto">Lançamento de faturas e despesas.</p>
 
       <form className="cartao-form" onSubmit={guardar}>
-        {/* Colaborador */}
-        <h3>Colaborador</h3>
-        <div className="grelha-form">
-          <label>
-            Data de registo
-            <input value={new Date().toLocaleDateString('pt-PT')} disabled />
-          </label>
-          <label>
-            Colaborador
-            <input value={perfil.nome ?? '—'} disabled />
-          </label>
-        </div>
-
         {/* Dados da Fatura */}
-        <h3 className="seccao-form">Dados da fatura</h3>
+        <h3>Dados da fatura</h3>
         <div className="grelha-form">
           <label>
             Número da fatura *
@@ -305,6 +307,7 @@ export function Movimentos({ perfil }: { perfil: Perfil }) {
               <option value="">(escolher)</option>
               <option value="Entrada">Entrada</option>
               <option value="Saída">Saída</option>
+              <option value="Previsão">Previsão (estimativa)</option>
             </select>
           </label>
           <label>
@@ -341,7 +344,7 @@ export function Movimentos({ perfil }: { perfil: Perfil }) {
             Cliente do projeto
             <input value={projetoSel?.clientes?.nome ?? '—'} disabled />
           </label>
-          <CampoListaInteligente rotulo="Categoria" tabela="categorias_mov" empresaId={perfil.empresa_id} valor={form.categoria} aoMudar={(v) => mudar('categoria', v)} filtroColuna="tipo" filtroValor={form.tipo_custo} />
+          <CampoListaInteligente rotulo="Rubrica" tabela="categorias_mov" empresaId={perfil.empresa_id} valor={form.categoria} aoMudar={(v) => mudar('categoria', v)} filtroColuna="tipo" filtroValor={form.tipo_custo} />
           <CampoListaInteligente rotulo="Tipo de documento" tabela="tipos_documento" empresaId={perfil.empresa_id} valor={form.tipo_documento} aoMudar={(v) => mudar('tipo_documento', v)} />
           <label>
             Fornecedor / Obs
@@ -349,65 +352,80 @@ export function Movimentos({ perfil }: { perfil: Perfil }) {
           </label>
           <label>
             Data de emissão
-            <input type="date" value={form.data_emissao} onChange={(e) => mudar('data_emissao', e.target.value)} />
+            <input type="date" max={HOJE} value={form.data_emissao} onChange={(e) => mudar('data_emissao', e.target.value)} />
           </label>
           <label>
             Data de vencimento
             <input type="date" value={form.data_vencimento} onChange={(e) => mudar('data_vencimento', e.target.value)} />
           </label>
           <label>
-            Valor líquido (€)
-            <input type="number" step="0.01" value={form.valor_liquido} onChange={(e) => mudar('valor_liquido', e.target.value)} />
+            Valor líquido
+            <input
+              value={form.valor_liquido}
+              onChange={(e) => mudar('valor_liquido', formatarValor(e.target.value))}
+              inputMode="numeric"
+              placeholder="0,00 €"
+            />
           </label>
           <label>
             IVA (%)
             <input type="number" step="0.01" value={form.iva} onChange={(e) => mudar('iva', e.target.value)} placeholder="Ex: 23" />
           </label>
           <label>
-            Valor bruto (€)
-            <input value={valorBruto ? valorBruto.toFixed(2) : ''} disabled placeholder="(automático)" />
+            Valor bruto
+            <input value={valorBruto ? `${valorBruto.toFixed(2).replace('.', ',')} €` : ''} disabled placeholder="(automático)" />
           </label>
         </div>
 
-        {/* Pagamento (os pagamentos — total/parcial e "pronto pagamento" — entram na próxima etapa) */}
-        <h3 className="seccao-form">Pagamento</h3>
-        <div className="grelha-form">
-          <label>
-            Método de pagamento
-            <select value={form.metodo_pagamento} onChange={(e) => mudar('metodo_pagamento', e.target.value)}>
-              <option value="">(escolher)</option>
-              <option value="Dinheiro">Dinheiro</option>
-              <option value="Cartão">Cartão</option>
-              <option value="Transferência">Transferência</option>
-              <option value="Outros">Outros</option>
-            </select>
-          </label>
-          <label>
-            Conta bancária
-            <select
-              value={form.conta_bancaria}
-              onChange={(e) => mudar('conta_bancaria', e.target.value)}
-              disabled={!form.centro_custo}
-            >
-              <option value="">
-                {form.centro_custo ? '(escolher)' : '(escolhe primeiro o centro de custo)'}
-              </option>
-              {contasDoCentro(form.centro_custo).map((c) => (
-                <option key={c.id} value={c.nome}>
-                  {c.nome}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Observação
-            <input value={form.obs} onChange={(e) => mudar('obs', e.target.value)} />
-          </label>
-        </div>
-        <label className="campo-checkbox campo-checkbox-lote">
-          <input type="checkbox" checked={prontoPagamento} onChange={(e) => setProntoPagamento(e.target.checked)} />
-          Pronto pagamento — paga já o valor bruto todo (com o método/conta acima)
-        </label>
+        {/* Pagamento — oculto; abre num botão só quando se quer lançar logo o pagamento */}
+        <button
+          type="button"
+          className="botao-mini-cinza seccao-form"
+          onClick={() => setMostrarPagamento((v) => !v)}
+        >
+          💳 {mostrarPagamento ? 'Esconder pagamento' : 'Lançar pagamento agora (opcional)'}
+        </button>
+        {mostrarPagamento && (
+          <>
+            <div className="grelha-form">
+              <label>
+                Método de pagamento
+                <select value={form.metodo_pagamento} onChange={(e) => mudar('metodo_pagamento', e.target.value)}>
+                  <option value="">(escolher)</option>
+                  <option value="Dinheiro">Dinheiro</option>
+                  <option value="Cartão">Cartão</option>
+                  <option value="Transferência">Transferência</option>
+                  <option value="Outros">Outros</option>
+                </select>
+              </label>
+              <label>
+                Conta bancária
+                <select
+                  value={form.conta_bancaria}
+                  onChange={(e) => mudar('conta_bancaria', e.target.value)}
+                  disabled={!form.centro_custo}
+                >
+                  <option value="">
+                    {form.centro_custo ? '(escolher)' : '(escolhe primeiro o centro de custo)'}
+                  </option>
+                  {contasDoCentro(form.centro_custo).map((c) => (
+                    <option key={c.id} value={c.nome}>
+                      {c.nome}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Observação
+                <input value={form.obs} onChange={(e) => mudar('obs', e.target.value)} />
+              </label>
+            </div>
+            <label className="campo-checkbox campo-checkbox-lote">
+              <input type="checkbox" checked={prontoPagamento} onChange={(e) => setProntoPagamento(e.target.checked)} />
+              Pronto pagamento — paga já o valor bruto todo (com o método/conta acima)
+            </label>
+          </>
+        )}
 
         {mensagem && <div className="mensagem">{mensagem}</div>}
         <div className="form-botoes">
@@ -423,12 +441,25 @@ export function Movimentos({ perfil }: { perfil: Perfil }) {
       {/* Lista de movimentos */}
       <div className="lista">
         <div className="lista-cabecalho">
-          <h3>Movimentos ({movimentos.length})</h3>
+          <h3>
+            Faturas / Movimentos ({movimentosFiltrados.length}
+            {movimentosFiltrados.length !== movimentos.length ? ` de ${movimentos.length}` : ''})
+          </h3>
+          <div className="filtros">
+            <input
+              className="filtro-texto"
+              placeholder="🔍 Procurar (nº fatura, fornecedor, projeto)…"
+              value={filtroTexto}
+              onChange={(e) => setFiltroTexto(e.target.value)}
+            />
+          </div>
         </div>
         {carregando ? (
           <p>A carregar…</p>
         ) : movimentos.length === 0 ? (
           <p className="vazio">Ainda não há movimentos lançados.</p>
+        ) : movimentosFiltrados.length === 0 ? (
+          <p className="vazio">Nenhuma fatura corresponde à pesquisa.</p>
         ) : (
           <div className="tabela-scroll">
             <table className="tabela">
@@ -447,7 +478,7 @@ export function Movimentos({ perfil }: { perfil: Perfil }) {
                 </tr>
               </thead>
               <tbody>
-                {movimentos.map((m) => {
+                {movimentosFiltrados.map((m) => {
                   const estado = estadoDe(m)
                   return (
                     <tr key={m.id}>
@@ -525,8 +556,13 @@ export function Movimentos({ perfil }: { perfil: Perfil }) {
                 <h4 className="detalhe-subtitulo">Adicionar pagamento</h4>
                 <div className="grelha-form">
                   <label>
-                    Valor (€)
-                    <input type="number" step="0.01" value={pagValor} onChange={(e) => setPagValor(e.target.value)} />
+                    Valor
+                    <input
+                      value={pagValor}
+                      onChange={(e) => setPagValor(formatarValor(e.target.value))}
+                      inputMode="numeric"
+                      placeholder="0,00 €"
+                    />
                   </label>
                   <label>
                     Data
