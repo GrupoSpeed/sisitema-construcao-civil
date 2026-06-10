@@ -49,6 +49,16 @@ export function BarraTopo({
                 </button>
                 <button
                   type="button"
+                  className={pagina === 'pedidos' ? 'ativo' : ''}
+                  onClick={() => {
+                    aoNavegar('pedidos')
+                    setMenuAberto(false)
+                  }}
+                >
+                  🛒 Pedidos de Material
+                </button>
+                <button
+                  type="button"
                   className={pagina === 'projetos' ? 'ativo' : ''}
                   onClick={() => {
                     aoNavegar('projetos')

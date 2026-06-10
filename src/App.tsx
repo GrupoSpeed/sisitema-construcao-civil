@@ -4,6 +4,7 @@ import { Login } from './components/Login'
 import { BarraTopo } from './components/BarraTopo'
 import { CatalogoProdutos } from './components/CatalogoProdutos'
 import { Projetos } from './components/Projetos'
+import { Pedidos } from './components/Pedidos'
 import { PerfilEmpresa } from './components/PerfilEmpresa'
 import { GestaoEmpresas } from './components/GestaoEmpresas'
 import { RodaPe } from './components/RodaPe'
@@ -33,6 +34,8 @@ function App() {
           <PerfilEmpresa />
         ) : pagina === 'projetos' ? (
           <Projetos perfil={perfil} />
+        ) : pagina === 'pedidos' ? (
+          <Pedidos perfil={perfil} />
         ) : pagina === 'empresas' && perfil.is_super_admin ? (
           <GestaoEmpresas />
         ) : (
