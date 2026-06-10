@@ -53,17 +53,18 @@ export function SeletorCliente({ empresaId, valor, aoMudar, desativado = false }
       {aCriarNovo ? (
         <div className="cliente-novo">
           <input
+            value={novoNig}
+            onChange={(e) => setNovoNig(e.target.value)}
+            placeholder="NIG (opcional)"
+            title="NIG — Número de Identificação no Grupo"
+            className="cliente-novo-nig"
+            autoFocus
+          />
+          <input
             value={novoNome}
             onChange={(e) => setNovoNome(e.target.value)}
             placeholder="Nome do cliente"
             spellCheck={false}
-            autoFocus
-          />
-          <input
-            value={novoNig}
-            onChange={(e) => setNovoNig(e.target.value)}
-            placeholder="NIG (opcional)"
-            className="cliente-novo-nig"
           />
           <button type="button" className="botao-mini" onClick={adicionarNovo} disabled={aGuardar}>
             {aGuardar ? '…' : 'Adicionar'}
@@ -84,8 +85,7 @@ export function SeletorCliente({ empresaId, valor, aoMudar, desativado = false }
           <option value="">(escolher)</option>
           {clientes.map((c) => (
             <option key={c.id} value={c.id}>
-              {c.nome}
-              {c.nig ? ` (${c.nig})` : ''}
+              {c.nig ? `${c.nig} - ${c.nome}` : c.nome}
             </option>
           ))}
           <option value="__novo__">➕ Novo cliente…</option>

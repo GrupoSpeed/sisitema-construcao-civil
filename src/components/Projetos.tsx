@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import type { Perfil } from '../contexts/AuthContext'
-import { capitalizarPalavras } from '../lib/constantes'
+import { capitalizarPalavras, agrupar3 } from '../lib/constantes'
 import { SeletorCliente } from './SeletorCliente'
 
 type Projeto = {
@@ -248,7 +248,12 @@ export function Projetos({ perfil }: { perfil: Perfil }) {
             </label>
             <label>
               Contacto do Diretor
-              <input value={form.diretor_contacto} onChange={(e) => mudar('diretor_contacto', e.target.value)} inputMode="numeric" />
+              <input
+                value={form.diretor_contacto}
+                onChange={(e) => mudar('diretor_contacto', agrupar3(e.target.value))}
+                inputMode="numeric"
+                placeholder="000 000 000"
+              />
             </label>
             <label>
               Encarregado / Responsável de Equipa
@@ -355,8 +360,11 @@ export function Projetos({ perfil }: { perfil: Perfil }) {
                       <strong>{p.nome}</strong>
                     </td>
                     <td>
-                      {p.clientes?.nome ?? '—'}
-                      {p.clientes?.nig ? ` (${p.clientes.nig})` : ''}
+                      {p.clientes
+                        ? p.clientes.nig
+                          ? `${p.clientes.nig} - ${p.clientes.nome}`
+                          : p.clientes.nome
+                        : '—'}
                     </td>
                     <td>{p.morada ?? '—'}</td>
                     <td>{p.zona ?? '—'}</td>

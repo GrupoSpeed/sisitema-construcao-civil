@@ -529,6 +529,8 @@ body {
 
 .cartao-form input,
 .cartao-form select {
+  width: 100%;
+  box-sizing: border-box;
   padding: 10px;
   border: 1px solid var(--borda);
   border-radius: 8px;
@@ -767,17 +769,20 @@ body {
 
 .cliente-novo {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   align-items: center;
 }
 
+/* Cada campo ocupa a linha toda; os botões ficam por baixo, lado a lado */
 .cliente-novo input {
-  flex: 1;
+  flex: 1 1 100%;
   min-width: 0;
 }
 
-.cliente-novo .cliente-novo-nig {
-  flex: 0 0 110px;
+.cliente-novo .botao-mini,
+.cliente-novo .botao-mini-cinza {
+  flex: 0 0 auto;
 }
 
 /* Campo fixo no modo "adicionar vários": cor distinta, sem aspeto de desativado */
