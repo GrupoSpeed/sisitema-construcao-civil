@@ -7,6 +7,7 @@ import { Projetos } from './components/Projetos'
 import { Pedidos } from './components/Pedidos'
 import { ListaMateriais } from './components/ListaMateriais'
 import { Movimentos } from './components/Movimentos'
+import { Configuracoes } from './components/Configuracoes'
 import { PerfilEmpresa } from './components/PerfilEmpresa'
 import { GestaoEmpresas } from './components/GestaoEmpresas'
 import { RodaPe } from './components/RodaPe'
@@ -42,6 +43,8 @@ function App() {
           <ListaMateriais perfil={perfil} />
         ) : pagina === 'movimentos' ? (
           <Movimentos perfil={perfil} />
+        ) : pagina === 'configuracoes' ? (
+          <Configuracoes perfil={perfil} />
         ) : pagina === 'empresas' && perfil.is_super_admin ? (
           <GestaoEmpresas />
         ) : (

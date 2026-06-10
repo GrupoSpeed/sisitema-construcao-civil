@@ -103,6 +103,18 @@ export function BarraTopo({
                 >
                   🏢 Perfil da Empresa
                 </button>
+                {(perfil ? perfil.nivel_acesso >= 8 || perfil.is_super_admin : false) && (
+                  <button
+                    type="button"
+                    className={pagina === 'configuracoes' ? 'ativo' : ''}
+                    onClick={() => {
+                      aoNavegar('configuracoes')
+                      setMenuAberto(false)
+                    }}
+                  >
+                    ⚙️ Configurações
+                  </button>
+                )}
                 {perfil?.is_super_admin && (
                   <button
                     type="button"

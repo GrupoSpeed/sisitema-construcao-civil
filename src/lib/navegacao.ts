@@ -7,3 +7,4 @@ export type Pagina =
   | 'projetos'
   | 'empresa'
   | 'empresas'
+  | 'configuracoes'
