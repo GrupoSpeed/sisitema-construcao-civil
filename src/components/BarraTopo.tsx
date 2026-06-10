@@ -57,6 +57,20 @@ export function BarraTopo({
                 >
                   🛒 Pedidos de Material
                 </button>
+                {(perfil
+                  ? perfil.nivel_acesso >= 3 || perfil.is_comprador || perfil.is_super_admin
+                  : false) && (
+                  <button
+                    type="button"
+                    className={pagina === 'materiais' ? 'ativo' : ''}
+                    onClick={() => {
+                      aoNavegar('materiais')
+                      setMenuAberto(false)
+                    }}
+                  >
+                    📊 Lista de Materiais
+                  </button>
+                )}
                 <button
                   type="button"
                   className={pagina === 'projetos' ? 'ativo' : ''}

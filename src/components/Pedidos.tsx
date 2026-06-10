@@ -6,12 +6,20 @@ import { supabase } from '../lib/supabaseClient'
 import type { Perfil } from '../contexts/AuthContext'
 
 type Projeto = { id: string; nome: string; nr_projeto: string | null }
-type Produto = { id: string; nome: string; unidade: string }
+type Produto = {
+  id: string
+  nome: string
+  unidade: string
+  setor: string | null
+  categoria: string | null
+  foto_url: string | null
+}
 
 // Linha do "carrinho" antes de enviar
 type ItemCarrinho = {
   produto_id: string
   nome: string
+  foto_url: string | null
   quantidade: string
   unidade: string
   observacao: string
@@ -19,11 +27,12 @@ type ItemCarrinho = {
 
 // Pedido já criado (para a lista)
 type PedidoItem = {
+  id: string
   quantidade: number
   unidade: string
   observacao: string | null
   estado: string
-  produtos: { nome: string } | null
+  produtos: { nome: string; foto_url: string | null } | null
 }
 type Pedido = {
   id: string
@@ -56,17 +65,25 @@ export function Pedidos({ perfil }: { perfil: Perfil }) {
   const [dataNecessidade, setDataNecessidade] = useState('')
   const [observacao, setObservacao] = useState('')
   const [carrinho, setCarrinho] = useState<ItemCarrinho[]>([])
-  const [produtoEscolhido, setProdutoEscolhido] = useState('')
+  const [alvoCancelar, setAlvoCancelar] = useState<{ item: PedidoItem; pedido: Pedido } | null>(null)
+  const [aCancelar, setACancelar] = useState(false)
+  const [setorPedido, setSetorPedido] = useState('')
+  const [categoriaPedido, setCategoriaPedido] = useState('')
+  const [pesquisaProduto, setPesquisaProduto] = useState('')
 
   async function carregarTudo() {
     setCarregando(true)
     const [resProj, resProd, resPed] = await Promise.all([
       supabase.from('projetos').select('id, nome, nr_projeto').order('nome'),
-      supabase.from('produtos').select('id, nome, unidade').eq('estado', 'aprovado').order('nome'),
+      supabase
+        .from('produtos')
+        .select('id, nome, unidade, setor, categoria, foto_url')
+        .eq('estado', 'aprovado')
+        .order('nome'),
       supabase
         .from('pedidos_material')
         .select(
-          'id, estado, data_necessidade, observacao, criado_em, projetos(nome, nr_projeto), pedido_itens(quantidade, unidade, observacao, estado, produtos(nome))',
+          'id, estado, data_necessidade, observacao, criado_em, projetos(nome, nr_projeto), pedido_itens(id, quantidade, unidade, observacao, estado, produtos(nome, foto_url))',
         )
         .eq('solicitado_por', perfil.id)
         .order('criado_em', { ascending: false }),
@@ -82,19 +99,25 @@ export function Pedidos({ perfil }: { perfil: Perfil }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  function adicionarAoCarrinho(produtoId: string) {
-    if (!produtoId) return
+  // Ao marcar/desmarcar um produto, entra/sai logo do pedido (preenche-se a info em baixo)
+  function alternarProduto(produtoId: string) {
     if (carrinho.some((i) => i.produto_id === produtoId)) {
-      setProdutoEscolhido('')
+      setCarrinho((c) => c.filter((i) => i.produto_id !== produtoId))
       return
     }
     const p = produtos.find((x) => x.id === produtoId)
     if (!p) return
     setCarrinho((c) => [
       ...c,
-      { produto_id: p.id, nome: p.nome, quantidade: '1', unidade: p.unidade, observacao: '' },
+      {
+        produto_id: p.id,
+        nome: p.nome,
+        foto_url: p.foto_url,
+        quantidade: '1',
+        unidade: p.unidade,
+        observacao: '',
+      },
     ])
-    setProdutoEscolhido('')
   }
 
   function mudarItem(produtoId: string, campo: keyof ItemCarrinho, valor: string) {
@@ -110,7 +133,6 @@ export function Pedidos({ perfil }: { perfil: Perfil }) {
     setDataNecessidade('')
     setObservacao('')
     setCarrinho([])
-    setProdutoEscolhido('')
   }
 
   async function enviar(evento: FormEvent) {
@@ -173,6 +195,47 @@ export function Pedidos({ perfil }: { perfil: Perfil }) {
     carregarTudo()
   }
 
+  // Cancela um item (só enquanto "solicitado"). Se for o último, remove o pedido vazio.
+  async function cancelarItem() {
+    if (!alvoCancelar) return
+    const { item, pedido } = alvoCancelar
+    setACancelar(true)
+    const { error } = await supabase.from('pedido_itens').delete().eq('id', item.id)
+    if (!error && pedido.pedido_itens.length === 1) {
+      await supabase.from('pedidos_material').delete().eq('id', pedido.id)
+    }
+    setACancelar(false)
+    setAlvoCancelar(null)
+    if (error) {
+      setMensagem('❌ Não foi possível cancelar: ' + error.message)
+      return
+    }
+    setMensagem('🗑️ Material cancelado.')
+    carregarTudo()
+  }
+
+  const setoresProduto = [
+    ...new Set(produtos.map((p) => p.setor).filter(Boolean)),
+  ] as string[]
+  // Categorias disponíveis (do setor escolhido, ou de todos)
+  const categoriasProduto = [
+    ...new Set(
+      produtos
+        .filter((p) => !setorPedido || p.setor === setorPedido)
+        .map((p) => p.categoria)
+        .filter(Boolean),
+    ),
+  ] as string[]
+
+  // Produtos visíveis na lista (setor + categoria + pesquisa). Os já no pedido aparecem marcados.
+  const termoPesquisa = pesquisaProduto.trim().toLowerCase()
+  const produtosDisponiveis = produtos.filter(
+    (p) =>
+      (!setorPedido || p.setor === setorPedido) &&
+      (!categoriaPedido || p.categoria === categoriaPedido) &&
+      (!termoPesquisa || p.nome.toLowerCase().includes(termoPesquisa)),
+  )
+
   return (
     <div className="pagina pagina-larga">
       <h2>Pedidos de Material</h2>
@@ -205,25 +268,72 @@ export function Pedidos({ perfil }: { perfil: Perfil }) {
             </label>
           </div>
 
-          {/* Adicionar produtos ao carrinho */}
+          {/* Adicionar produtos ao carrinho — filtrar por setor/categoria facilita */}
           <div className="adicionar-produto">
-            <label>
-              Adicionar produto
-              <select value={produtoEscolhido} onChange={(e) => adicionarAoCarrinho(e.target.value)}>
-                <option value="">➕ Escolher produto do catálogo…</option>
-                {produtos
-                  .filter((p) => !carrinho.some((i) => i.produto_id === p.id))
-                  .map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.nome}
+            <div className="grelha-form">
+              <label>
+                Setor
+                <select
+                  value={setorPedido}
+                  onChange={(e) => {
+                    setSetorPedido(e.target.value)
+                    setCategoriaPedido('') // a categoria depende do setor
+                  }}
+                >
+                  <option value="">Todos os setores</option>
+                  {setoresProduto.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
                     </option>
                   ))}
-              </select>
-            </label>
-            {produtos.length === 0 && (
+                </select>
+              </label>
+              <label>
+                Categoria
+                <select value={categoriaPedido} onChange={(e) => setCategoriaPedido(e.target.value)}>
+                  <option value="">Todas as categorias</option>
+                  {categoriasProduto.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <span className="rotulo-campo">
+              Escolher produtos — marca os que queres ({produtosDisponiveis.length} disponíveis)
+            </span>
+            <input
+              className="filtro-texto pesquisa-produto"
+              placeholder="🔍 Procurar produto…"
+              value={pesquisaProduto}
+              onChange={(e) => setPesquisaProduto(e.target.value)}
+            />
+            {produtos.length === 0 ? (
               <small className="aviso-duplicado">
                 ⚠️ Ainda não há produtos aprovados no catálogo para pedir.
               </small>
+            ) : produtosDisponiveis.length === 0 ? (
+              <p className="vazio">Nenhum produto neste setor/categoria.</p>
+            ) : (
+              <div className="lista-escolher">
+                {produtosDisponiveis.map((p) => (
+                  <label key={p.id} className="linha-escolher">
+                    <input
+                      type="checkbox"
+                      checked={carrinho.some((i) => i.produto_id === p.id)}
+                      onChange={() => alternarProduto(p.id)}
+                    />
+                    {p.foto_url ? (
+                      <img className="miniatura-mini" src={p.foto_url} alt="" />
+                    ) : (
+                      <span className="miniatura-mini miniatura-vazia">—</span>
+                    )}
+                    <span className="linha-escolher-nome">{p.nome}</span>
+                  </label>
+                ))}
+              </div>
             )}
           </div>
 
@@ -233,6 +343,7 @@ export function Pedidos({ perfil }: { perfil: Perfil }) {
               <table className="tabela">
                 <thead>
                   <tr>
+                    <th>Foto</th>
                     <th>Produto</th>
                     <th>Quantidade</th>
                     <th>Unidade</th>
@@ -243,6 +354,13 @@ export function Pedidos({ perfil }: { perfil: Perfil }) {
                 <tbody>
                   {carrinho.map((i) => (
                     <tr key={i.produto_id}>
+                      <td>
+                        {i.foto_url ? (
+                          <img className="miniatura" src={i.foto_url} alt={i.nome} />
+                        ) : (
+                          <span className="miniatura-vazia">—</span>
+                        )}
+                      </td>
                       <td>{i.nome}</td>
                       <td>
                         <input
@@ -328,11 +446,32 @@ export function Pedidos({ perfil }: { perfil: Perfil }) {
                   <span className={'badge badge-' + p.estado}>{p.estado}</span>
                 </div>
                 <ul className="cartao-pedido-itens">
-                  {p.pedido_itens.map((it, idx) => (
-                    <li key={idx}>
-                      <span>{it.produtos?.nome ?? 'Produto'}</span>
-                      <span className="cartao-pedido-qtd">
-                        {it.quantidade} {it.unidade}
+                  {p.pedido_itens.map((it) => (
+                    <li key={it.id}>
+                      <span className="item-com-foto">
+                        {it.produtos?.foto_url ? (
+                          <img className="miniatura-mini" src={it.produtos.foto_url} alt="" />
+                        ) : (
+                          <span className="miniatura-mini miniatura-vazia">—</span>
+                        )}
+                        {it.produtos?.nome ?? 'Produto'}
+                      </span>
+                      <span className="cartao-pedido-item-dir">
+                        <span className="cartao-pedido-qtd">
+                          {it.quantidade} {it.unidade}
+                        </span>
+                        {it.estado === 'solicitado' ? (
+                          <button
+                            type="button"
+                            className="botao-cancelar-item"
+                            title="Cancelar este material"
+                            onClick={() => setAlvoCancelar({ item: it, pedido: p })}
+                          >
+                            ✕
+                          </button>
+                        ) : (
+                          <span className={'badge badge-' + it.estado}>{it.estado}</span>
+                        )}
                       </span>
                     </li>
                   ))}
@@ -343,6 +482,27 @@ export function Pedidos({ perfil }: { perfil: Perfil }) {
           </div>
         )}
       </div>
+
+      {/* Confirmação de cancelar item */}
+      {alvoCancelar && (
+        <div className="modal-fundo" onClick={() => setAlvoCancelar(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Cancelar material?</h3>
+            <p>
+              Queres cancelar <strong>{alvoCancelar.item.produtos?.nome ?? 'este material'}</strong>{' '}
+              deste pedido? Esta ação não pode ser desfeita.
+            </p>
+            <div className="modal-botoes">
+              <button type="button" className="botao-secundario" onClick={() => setAlvoCancelar(null)}>
+                Não
+              </button>
+              <button type="button" className="botao-perigo" onClick={cancelarItem} disabled={aCancelar}>
+                {aCancelar ? 'A cancelar…' : 'Sim, cancelar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
