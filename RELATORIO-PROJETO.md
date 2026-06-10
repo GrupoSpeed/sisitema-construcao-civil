@@ -59,11 +59,13 @@ O **processo completo do escritório** (na Validação: conta bancária específ
 - ✅ **Movimentos** (lançamento de faturas, nível 4+): baseado no modelo do cliente. Fatura + contabilístico (Movimento Entrada/Saída, Tipo de custo Fixo/Variável, Categoria por tipo) + documento (valores, IVA, Valor Bruto auto) + **pagamentos total/parcial** (vários pagamentos até liquidar, regista quem lançou) + "Pronto pagamento". SQL `20`–`22`. Listas de classificação em tabelas próprias (centros_custo, mov_tipos, tipos_custo, tipos_documento, categorias_mov c/ tipo Fixo/Variável, tipos_pagamento, contas_bancarias).
 
 ## 5. PRÓXIMO PASSO ▶️
-1. **Ecrã "Configurações" (Admin)** — gerir todas as listas (centros de custo, contas bancárias, tipos de documento, movimento, tipo de custo, categorias, etc.), **pré-preenchidas** com as tabelas do cliente (Excel) e podendo editar/remover. *(É o ponto 10 da etapa dos Movimentos, ficou por fazer.)*
-2. **Contas bancárias ricas + relação centro de custo** — campos Nome/Banco/Titular/IBAN no Perfil da Empresa e ligação conta↔centro de custo (ver [[centro-custo-contas-bancarias]]).
-3. **Histórico de preços** ao comprar materiais.
-4. **Notificações 🔔** dentro do sistema.
+1. **Contas bancárias ricas + relação centro de custo** — campos Nome/Banco/Titular/IBAN e ligação conta↔centro de custo (ver [[centro-custo-contas-bancarias]]).
+2. **Histórico de preços** ao comprar materiais.
+3. **Notificações 🔔** dentro do sistema.
+4. **Editar movimento / ver lista de movimentos com filtros** (por agora só cria + lista simples + pagamentos).
 5. Melhorar criação de colaboradores (**Edge Function**) e gestão de clientes (editar/eliminar).
+
+> ✅ Feito (etapa Movimentos): formulário, pagamentos total/parcial, e ecrã **⚙️ Configurações** (Admin gere as listas, pré-preenchidas). SQL até ao `23`.
 
 ## 6. Notas / segredos
 - Palavra-passe da BD e chave `service_role`: **nunca** partilhar/colar no chat. Só usamos a `anon`.
