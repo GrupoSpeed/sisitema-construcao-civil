@@ -55,14 +55,15 @@ O **processo completo do escritório** (na Validação: conta bancária específ
 - ✅ **Empresas Registadas** (Super Admin).
 - ✅ **Projetos** (mapa completo: nº, cliente mini-CRM, zona, centro de custo, diretor+contacto, encarregado, datas, estado).
 - ✅ **Pedidos de Material — Solicitar:** filtra por setor/categoria + pesquisa, lista de produtos com foto e caixas de seleção (marca → entra no pedido e preenche qtd/unidade/obs), carrinho, envia. **"Os meus pedidos"** com cancelamento **item a item** (enquanto "solicitado").
-- ✅ **Lista de Materiais** (gestão por item, modelo do cliente): abas Tudo/Solicitado/Reservado/Comprado/Validado/Rejeitado, filtros projeto/setor, ações por linha (Reservar/Rejeitar/Comprar/Validar), **👁️ Ver** (detalhe + dados do solicitante).
+- ✅ **Lista de Materiais** (gestão por item, modelo do cliente): abas Tudo/Solicitado/Reservado/Comprado/Validado/Rejeitado, filtros projeto/setor/fornecedor, foto do produto, ações por linha (Reservar/Rejeitar/Comprar/Validar), **👁️ Ver** (detalhe + dados do solicitante).
+- ✅ **Movimentos** (lançamento de faturas, nível 4+): baseado no modelo do cliente. Fatura + contabilístico (Movimento Entrada/Saída, Tipo de custo Fixo/Variável, Categoria por tipo) + documento (valores, IVA, Valor Bruto auto) + **pagamentos total/parcial** (vários pagamentos até liquidar, regista quem lançou) + "Pronto pagamento". SQL `20`–`22`. Listas de classificação em tabelas próprias (centros_custo, mov_tipos, tipos_custo, tipos_documento, categorias_mov c/ tipo Fixo/Variável, tipos_pagamento, contas_bancarias).
 
 ## 5. PRÓXIMO PASSO ▶️
-1. **Processo do escritório (Validar a sério):** definir o que o escritório preenche (conta bancária específica, etc.) — ficou simplificado por agora.
-2. **Histórico de preços:** criar `historico_precos` ao registar a compra (guardar valor real por produto/fornecedor).
-3. **Contas bancárias:** tela para o Admin as criar (a compra/validação já referencia conta).
+1. **Ecrã "Configurações" (Admin)** — gerir todas as listas (centros de custo, contas bancárias, tipos de documento, movimento, tipo de custo, categorias, etc.), **pré-preenchidas** com as tabelas do cliente (Excel) e podendo editar/remover. *(É o ponto 10 da etapa dos Movimentos, ficou por fazer.)*
+2. **Contas bancárias ricas + relação centro de custo** — campos Nome/Banco/Titular/IBAN no Perfil da Empresa e ligação conta↔centro de custo (ver [[centro-custo-contas-bancarias]]).
+3. **Histórico de preços** ao comprar materiais.
 4. **Notificações 🔔** dentro do sistema.
-5. Melhorar criação de colaboradores (**Edge Function** server-side) e gestão de clientes (editar/eliminar).
+5. Melhorar criação de colaboradores (**Edge Function**) e gestão de clientes (editar/eliminar).
 
 ## 6. Notas / segredos
 - Palavra-passe da BD e chave `service_role`: **nunca** partilhar/colar no chat. Só usamos a `anon`.
