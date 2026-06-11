@@ -36,6 +36,7 @@ export function CatalogoProdutos({ perfil }: { perfil: Perfil }) {
   // Edição e eliminação
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [produtoParaEliminar, setProdutoParaEliminar] = useState<Produto | null>(null)
+  const [produtoDetalhe, setProdutoDetalhe] = useState<Produto | null>(null)
   const [aEliminar, setAEliminar] = useState(false)
 
   // Campos do formulário
@@ -542,25 +543,23 @@ export function CatalogoProdutos({ perfil }: { perfil: Perfil }) {
         ) : produtosFiltrados.length === 0 ? (
           <p className="vazio">Nenhum produto corresponde ao filtro.</p>
         ) : (
+          <>
+          <p className="subtexto">Clica num produto para ver os detalhes (marca, fornecedores, valor…) e editar.</p>
           <div className="tabela-scroll">
-          <table className="tabela">
+          <table className="tabela tabela-clicavel">
             <thead>
               <tr>
                 <th>Foto</th>
                 <th>Produto</th>
                 <th>Unidade</th>
-                <th>Marca</th>
-                <th>Fornecedores</th>
-                <th>Valor</th>
                 <th>Categoria</th>
                 <th>Setor</th>
                 <th>Estado</th>
-                <th>Ações</th>
               </tr>
             </thead>
             <tbody>
               {produtosFiltrados.map((p) => (
-                <tr key={p.id}>
+                <tr key={p.id} onClick={() => setProdutoDetalhe(p)}>
                   <td>
                     {p.foto_url ? (
                       <img className="miniatura" src={p.foto_url} alt={p.nome} />
@@ -570,48 +569,81 @@ export function CatalogoProdutos({ perfil }: { perfil: Perfil }) {
                   </td>
                   <td>{p.nome}</td>
                   <td>{p.unidade}</td>
-                  <td>{p.marca ?? '—'}</td>
-                  <td>
-                    {(p.produto_fornecedores ?? [])
-                      .filter((pf) => pf.fornecedores)
-                      .map((pf) =>
-                        pf.valor != null
-                          ? `${pf.fornecedores!.nome} (${pf.valor} €)`
-                          : pf.fornecedores!.nome,
-                      )
-                      .join(', ') || '—'}
-                  </td>
-                  <td>{p.valor_referencia != null ? `${p.valor_referencia} €` : '—'}</td>
                   <td>{p.categoria ?? '—'}</td>
                   <td>{p.setor}</td>
                   <td>
                     <span className={'badge badge-' + p.estado}>{p.estado}</span>
-                  </td>
-                  <td>
-                    <div className="acoes-celula">
-                      <button
-                        type="button"
-                        className="botao-acao"
-                        onClick={() => iniciarEdicao(p)}
-                      >
-                        ✏️ Editar
-                      </button>
-                      <button
-                        type="button"
-                        className="botao-acao botao-acao-perigo"
-                        onClick={() => setProdutoParaEliminar(p)}
-                      >
-                        🗑️ Eliminar
-                      </button>
-                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
           </div>
+          </>
         )}
       </div>
+
+      {/* Detalhe do produto */}
+      {produtoDetalhe && (
+        <div className="modal-fundo" onClick={() => setProdutoDetalhe(null)}>
+          <div className="modal modal-largo" onClick={(e) => e.stopPropagation()}>
+            <div className="detalhe-produto-topo">
+              {produtoDetalhe.foto_url ? (
+                <img className="detalhe-produto-foto" src={produtoDetalhe.foto_url} alt={produtoDetalhe.nome} />
+              ) : (
+                <span className="miniatura-vazia">—</span>
+              )}
+              <div>
+                <h3>{produtoDetalhe.nome}</h3>
+                <span className={'badge badge-' + produtoDetalhe.estado}>{produtoDetalhe.estado}</span>
+              </div>
+            </div>
+            <dl className="detalhe">
+              <dt>Setor</dt>
+              <dd>{produtoDetalhe.setor}</dd>
+              <dt>Categoria</dt>
+              <dd>{produtoDetalhe.categoria ?? '—'}</dd>
+              <dt>Unidade</dt>
+              <dd>{produtoDetalhe.unidade}</dd>
+              <dt>Marca</dt>
+              <dd>{produtoDetalhe.marca ?? '—'}</dd>
+              <dt>Valor de referência</dt>
+              <dd>{produtoDetalhe.valor_referencia != null ? `${produtoDetalhe.valor_referencia} €` : '—'}</dd>
+              <dt>Fornecedores</dt>
+              <dd>
+                {(produtoDetalhe.produto_fornecedores ?? [])
+                  .filter((pf) => pf.fornecedores)
+                  .map((pf) =>
+                    pf.valor != null ? `${pf.fornecedores!.nome} (${pf.valor} €)` : pf.fornecedores!.nome,
+                  )
+                  .join(', ') || '—'}
+              </dd>
+            </dl>
+            <div className="modal-botoes">
+              <button
+                type="button"
+                className="botao-perigo"
+                onClick={() => {
+                  setProdutoParaEliminar(produtoDetalhe)
+                  setProdutoDetalhe(null)
+                }}
+              >
+                🗑️ Eliminar
+              </button>
+              <button
+                type="button"
+                className="botao-primario"
+                onClick={() => {
+                  iniciarEdicao(produtoDetalhe)
+                  setProdutoDetalhe(null)
+                }}
+              >
+                ✏️ Editar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Confirmação de adicionar/editar */}
       {mostrarConfirmacao && (

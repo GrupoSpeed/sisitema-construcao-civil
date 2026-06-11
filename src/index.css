@@ -733,6 +733,29 @@ body {
   font-size: 12px;
 }
 
+/* Tabela com linhas clicáveis (abre detalhe) */
+.tabela-clicavel tbody tr {
+  cursor: pointer;
+}
+
+.tabela-clicavel tbody tr:hover {
+  background: #eff6ff;
+}
+
+.detalhe-produto-topo {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.detalhe-produto-foto {
+  width: 72px;
+  height: 72px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
 /* ----- Detalhe do material (relatório) ----- */
 .detalhe {
   display: grid;
