@@ -973,6 +973,16 @@ body {
   font-size: 12px;
 }
 
+/* Linha de item urgente na Lista de Materiais */
+.tabela tr.linha-urgente td {
+  background: #fef2f2;
+  box-shadow: inset 3px 0 0 var(--erro);
+}
+
+.marca-urgente {
+  margin-right: 6px;
+}
+
 /* Tabela com linhas clicáveis (abre detalhe) */
 .tabela-clicavel tbody tr {
   cursor: pointer;

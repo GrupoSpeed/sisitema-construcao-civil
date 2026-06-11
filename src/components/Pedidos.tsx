@@ -253,10 +253,8 @@ export function Pedidos({ perfil }: { perfil: Perfil }) {
           <div className="grelha-form">
             <label>
               Projeto *
-              <select value={projetoId} onChange={(e) => setProjetoId(e.target.value)} required>
-                <option value="" disabled hidden>
-                  (escolher)
-                </option>
+              <select value={projetoId} onChange={(e) => setProjetoId(e.target.value)}>
+                <option value="">(escolher)</option>
                 {projetos.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.nr_projeto ? `${p.nr_projeto} — ${p.nome}` : p.nome}

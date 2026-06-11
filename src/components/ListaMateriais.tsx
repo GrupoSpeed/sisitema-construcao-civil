@@ -23,6 +23,7 @@ type Item = {
   pedido: {
     data_necessidade: string | null
     observacao: string | null
+    urgente: boolean
     projetos: { nome: string; nr_projeto: string | null } | null
     solicitante: { nome: string | null; nivel_acesso: number; is_super_admin: boolean } | null
   } | null
@@ -79,7 +80,7 @@ export function ListaMateriais({ perfil }: { perfil: Perfil }) {
       supabase
         .from('pedido_itens')
         .select(
-          'id, quantidade, unidade, observacao, estado, valor_pago, metodo_pagamento, recibo_url, motivo_rejeicao, produtos(nome, setor, foto_url), fornecedores(nome), pedido:pedidos_material!inner(data_necessidade, observacao, projetos(nome, nr_projeto), solicitante:perfis!solicitado_por(nome, nivel_acesso, is_super_admin))',
+          'id, quantidade, unidade, observacao, estado, valor_pago, metodo_pagamento, recibo_url, motivo_rejeicao, produtos(nome, setor, foto_url), fornecedores(nome), pedido:pedidos_material!inner(data_necessidade, observacao, urgente, projetos(nome, nr_projeto), solicitante:perfis!solicitado_por(nome, nivel_acesso, is_super_admin))',
         )
         .order('criado_em', { ascending: false }),
       supabase.from('fornecedores').select('id, nome').order('nome'),
@@ -198,13 +199,16 @@ export function ListaMateriais({ perfil }: { perfil: Perfil }) {
     ...new Set(itens.map((i) => i.fornecedores?.nome).filter(Boolean)),
   ] as string[]
 
-  const itensFiltrados = itens.filter((i) => {
-    const okAba = aba === 'tudo' || i.estado === aba
-    const okProjeto = !filtroProjeto || i.pedido?.projetos?.nome === filtroProjeto
-    const okSetor = !filtroSetor || i.produtos?.setor === filtroSetor
-    const okFornecedor = !filtroFornecedor || i.fornecedores?.nome === filtroFornecedor
-    return okAba && okProjeto && okSetor && okFornecedor
-  })
+  const itensFiltrados = itens
+    .filter((i) => {
+      const okAba = aba === 'tudo' || i.estado === aba
+      const okProjeto = !filtroProjeto || i.pedido?.projetos?.nome === filtroProjeto
+      const okSetor = !filtroSetor || i.produtos?.setor === filtroSetor
+      const okFornecedor = !filtroFornecedor || i.fornecedores?.nome === filtroFornecedor
+      return okAba && okProjeto && okSetor && okFornecedor
+    })
+    // Urgentes primeiro
+    .sort((a, b) => Number(b.pedido?.urgente ?? false) - Number(a.pedido?.urgente ?? false))
 
   function contar(estado: string): number {
     return estado === 'tudo' ? itens.length : itens.filter((i) => i.estado === estado).length
@@ -297,7 +301,7 @@ export function ListaMateriais({ perfil }: { perfil: Perfil }) {
               </thead>
               <tbody>
                 {itensFiltrados.map((i) => (
-                  <tr key={i.id}>
+                  <tr key={i.id} className={i.pedido?.urgente ? 'linha-urgente' : undefined}>
                     <td>
                       {i.produtos?.foto_url ? (
                         <img className="miniatura" src={i.produtos.foto_url} alt="" />
@@ -306,6 +310,7 @@ export function ListaMateriais({ perfil }: { perfil: Perfil }) {
                       )}
                     </td>
                     <td>
+                      {i.pedido?.urgente && <span className="marca-urgente" title="Pedido urgente">🚨</span>}
                       {i.produtos?.nome ?? 'Produto'}
                       {i.observacao ? ` — ${i.observacao}` : ''}
                     </td>
