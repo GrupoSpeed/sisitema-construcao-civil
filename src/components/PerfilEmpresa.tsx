@@ -159,7 +159,7 @@ export function PerfilEmpresa() {
       </div>
       <p className="subtexto">Os dados da tua empresa no sistema.</p>
 
-      <form className="cartao-form" onSubmit={guardar}>
+      <form id="perfil-dados" className="cartao-form" onSubmit={guardar}>
         {/* Logótipo */}
         <div className="perfil-logo">
           <div className="perfil-logo-img">
@@ -308,7 +308,11 @@ export function PerfilEmpresa() {
         )}
       </form>
 
-      {podeGerir && empresa && <GestaoColaboradores empresaId={empresa.id} />}
+      {podeGerir && empresa && (
+        <div id="perfil-colaboradores">
+          <GestaoColaboradores empresaId={empresa.id} />
+        </div>
+      )}
 
       {/* Confirmação antes de gravar as alterações */}
       {mostrarConfirmacao && (

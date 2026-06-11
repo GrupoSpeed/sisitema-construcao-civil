@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useAuth } from './contexts/AuthContext'
 import { Login } from './components/Login'
 import { BarraTopo } from './components/BarraTopo'
+import { MenuLateral } from './components/MenuLateral'
 import { CatalogoProdutos } from './components/CatalogoProdutos'
 import { Projetos } from './components/Projetos'
 import { Pedidos } from './components/Pedidos'
@@ -16,6 +17,7 @@ import type { Pagina } from './lib/navegacao'
 function App() {
   const { session, perfil, carregando } = useAuth()
   const [pagina, setPagina] = useState<Pagina>('catalogo')
+  const [configLista, setConfigLista] = useState<string | undefined>(undefined)
 
   // Enquanto verifica se há sessão iniciada
   if (carregando) {
@@ -30,7 +32,20 @@ function App() {
   // Com sessão → área autenticada
   return (
     <>
-      <BarraTopo pagina={pagina} aoNavegar={setPagina} />
+      {perfil && (
+        <MenuLateral
+          pagina={pagina}
+          aoNavegar={setPagina}
+          aoAbrirConfig={(t) => {
+            setConfigLista(t)
+            setPagina('configuracoes')
+          }}
+          perfil={perfil}
+        />
+      )}
+
+      <div className="app-conteudo">
+      <BarraTopo />
 
       {perfil ? (
         pagina === 'empresa' ? (
@@ -44,7 +59,7 @@ function App() {
         ) : pagina === 'movimentos' ? (
           <Movimentos perfil={perfil} />
         ) : pagina === 'configuracoes' ? (
-          <Configuracoes perfil={perfil} />
+          <Configuracoes perfil={perfil} listaInicial={configLista} />
         ) : pagina === 'empresas' && perfil.is_super_admin ? (
           <GestaoEmpresas />
         ) : (
@@ -59,6 +74,7 @@ function App() {
       )}
 
       <RodaPe />
+      </div>
     </>
   )
 }

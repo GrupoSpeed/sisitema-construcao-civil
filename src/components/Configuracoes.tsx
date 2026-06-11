@@ -1,5 +1,5 @@
 // Ecrã de Configurações (Admin): gerir as listas usadas no sistema.
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Perfil } from '../contexts/AuthContext'
 import { GestaoLista } from './GestaoLista'
 import { LigacaoContas } from './LigacaoContas'
@@ -31,10 +31,21 @@ const LISTAS: ListaConfig[] = [
   { tabela: 'segmentos', rotulo: 'Segmentos' },
 ]
 
-export function Configuracoes({ perfil }: { perfil: Perfil }) {
+export function Configuracoes({
+  perfil,
+  listaInicial,
+}: {
+  perfil: Perfil
+  listaInicial?: string
+}) {
   const podeUsar = perfil.nivel_acesso >= 8 || perfil.is_super_admin
-  const [sel, setSel] = useState(LISTAS[0].tabela)
+  const [sel, setSel] = useState(listaInicial ?? LISTAS[0].tabela)
   const atual = LISTAS.find((l) => l.tabela === sel) ?? LISTAS[0]
+
+  // Quando o menu pede para abrir uma lista específica
+  useEffect(() => {
+    if (listaInicial) setSel(listaInicial)
+  }, [listaInicial])
 
   if (!podeUsar) {
     return (
